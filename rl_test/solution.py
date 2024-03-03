@@ -14,17 +14,30 @@ class solution:
 	#Add Variables required for solution
 	
     def __init__(self):
-        pass
+        self.replan = True
+        self.actions =[]
+        self.n = 3 # number of actions b4 replan # need to set
+        self.full_speed = True # need to set
+        self.heading = -135 # need to set
+        self.noop = False
+
 	#Given an observation return a valid action agent_id is agent that needs an action, observation space is the current normalized observation space for the specific agent
     def compute_action(self,agent_id:int, observation_normalized:list, observation:dict):
-        action = self.calc_actions(observation)
+        if self.replan:
+            self.actions = self.calc_actions(observation)[:self.n]
+            # self.actions = [1,2,3] # test
+            self.replan = False
+        elif len(self.actions) == 1: # last action, need to replan next time
+                self.replan = True
+                return self.actions[0]
 
-        if str(action).__contains__("dummy"):
-            action = 1
-        else:
-            action = 2
+        current_action = self.actions[0]
+        self.actions = self.actions[1:]
+        return current_action
 
-        return action
+
+
+
         # if agent_id == 0 or agent_id == 3:
         #     return self.policy_one.compute_single_action(observation_normalized)[0]
         # elif agent_id == 1 or agent_id == 4:
@@ -43,9 +56,12 @@ class solution:
         # Get actions from PDDL results
         plan_actions = self.extract_actions_from_plan_trace("pddl/plans/plan1_prob.pddl")
 
+        # Convert actions to discrete
+        plan_actions_num = self.convert_actions(plan_actions)
+
         # plan_actions = [1,2,3]
-        plan_action = plan_actions[0] # or n step
-        return plan_action
+        # plan_action = plan_actions[0] # or n step
+        return plan_actions_num
 
     def extract_actions_from_plan_trace(self, plane_trace_file: str):
         plan_actions = PddlPlusPlan()
@@ -163,6 +179,44 @@ class solution:
 
         out_file.write(")\n")
         out_file.close()
+
+    def convert_actions(self, plan_actions):
+        plan_actions_num = []
+
+        for n in range(len(plan_actions)):
+            if plan_actions[n].__contains__("full_speed"):
+                self.full_speed = True
+            if plan_actions[n].__contains__("half_speed"):
+                self.full_speed = False
+            if plan_actions[n].__contains__("heading_-135"):
+                self.heading = -135
+            if plan_actions[n].__contains__("heading_-90"):
+                self.heading = -90
+            if plan_actions[n].__contains__("heading_-45"):
+                self.heading = -45
+            if plan_actions[n].__contains__("heading_0"):
+                self.heading = 0
+            if plan_actions[n].__contains__("heading_45"):
+                self.heading = 45
+            if plan_actions[n].__contains__("heading_90"):
+                self.heading = 90
+            if plan_actions[n].__contains__("heading_135"):
+                self.heading = 135
+            if plan_actions[n].__contains__("heading_180"):
+                self.heading = 180
+            # if plan_actions[0].__contains__("noop"):
+            #     self.noop = True
+
+            if self.noop:
+                plan_actions_num.append(16)
+            elif self.full_speed:
+                heading_to_action = {180: 0, 135: 1, 90: 2, 45: 3, 0: 4, -45: 5, -90: 6, -135: 7}
+            else:
+                heading_to_action = {180: 8, 135: 9, 90: 10, 45: 11, 0: 12, -45: 13, -90: 14, -135: 15}
+            if self.heading in heading_to_action:
+                plan_actions_num.append(heading_to_action[self.heading])
+
+        return plan_actions_num
 
 class PddlParserUtils:
     """
