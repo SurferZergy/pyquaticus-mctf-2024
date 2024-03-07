@@ -74,9 +74,8 @@ class solution:
                     # if the planner ran out of memory:
                     # change the goal to killing a single pig to make the problem easier and try again with one fewer pig
                     return plan_actions
-                if "move" or "fire" in line: # or "fly_east" in line or "fly_north" in line or "fly_south" in line or "time-passing" in line or "fire_missile_at_ammo_storage" in line:
-                    action_name = (line.split(':')[1].split('[')[0]) #this is parsing the plan_capstone_prob.pddl (taking out the time)
-                    # print (str(action_angle_time) + "\n")
+                if "heading" or "speed" in line:
+                    action_name = (line.split(':')[1].split('[')[0])
 
                     plan_actions.append(TimedAction(action_name, 0.0))
                 if "syntax error" in line:
@@ -87,7 +86,7 @@ class solution:
 
                     break
 
-        return  plan_actions
+        return plan_actions
 
 
     def create_pddl_problem(self, obs):
@@ -184,25 +183,25 @@ class solution:
         plan_actions_num = []
 
         for n in range(len(plan_actions)):
-            if plan_actions[n].__contains__("full_speed"):
+            if plan_actions[n].action_name.__contains__("full_speed"):
                 self.full_speed = True
-            if plan_actions[n].__contains__("half_speed"):
+            if plan_actions[n].action_name.__contains__("half_speed"):
                 self.full_speed = False
-            if plan_actions[n].__contains__("heading_-135"):
+            if plan_actions[n].action_name.__contains__("heading_-135"):
                 self.heading = -135
-            if plan_actions[n].__contains__("heading_-90"):
+            if plan_actions[n].action_name.__contains__("heading_-90"):
                 self.heading = -90
-            if plan_actions[n].__contains__("heading_-45"):
+            if plan_actions[n].action_name.__contains__("heading_-45"):
                 self.heading = -45
-            if plan_actions[n].__contains__("heading_0"):
+            if plan_actions[n].action_name.__contains__("heading_0"):
                 self.heading = 0
-            if plan_actions[n].__contains__("heading_45"):
+            if plan_actions[n].action_name.__contains__("heading_45"):
                 self.heading = 45
-            if plan_actions[n].__contains__("heading_90"):
+            if plan_actions[n].action_name.__contains__("heading_90"):
                 self.heading = 90
-            if plan_actions[n].__contains__("heading_135"):
+            if plan_actions[n].action_name.__contains__("heading_135"):
                 self.heading = 135
-            if plan_actions[n].__contains__("heading_180"):
+            if plan_actions[n].action_name.__contains__("heading_180"):
                 self.heading = 180
             # if plan_actions[0].__contains__("noop"):
             #     self.noop = True
