@@ -15,35 +15,47 @@ class solution:
 	
     def __init__(self):
         self.replan = True
-        self.actions =[]
+        self.b1_actions = []
+        self.b2_actions = []
+        self.b3_actions = []
         self.n = 3 # number of actions b4 replan # need to set
-        self.full_speed = True # need to set
-        self.heading = -135 # need to set
-        self.noop = False
+        self.b1_full_speed = True # need to
+        self.b2_full_speed = True  # need to set
+        self.b3_full_speed = True  # need to set
+        self.b1_heading = -135 # need to set
+        self.b2_heading = -135  # need to set
+        self.b3_heading = -135  # need to set
+        self.curr_time = 0.0
+        self.time_inc = 0.1
+        # self.noop = False
 
 	#Given an observation return a valid action agent_id is agent that needs an action, observation space is the current normalized observation space for the specific agent
     def compute_action(self,agent_id:int, observation_normalized:list, observation:dict):
         if self.replan:
-            self.actions = self.calc_actions(observation)[:self.n]
-            # self.actions = [1,2,3] # test
+            self.b1_actions, self.b2_actions,self.b3_actions = self.calc_actions(observation)[:self.n]
             self.replan = False
-        elif len(self.actions) == 1: # last action, need to replan next time
+        elif len(self.b1_actions) == 1: # last action, need to replan next time
                 self.replan = True
-                return self.actions[0]
+                if agent_id == 0:
+                    return self.b1_actions[0]
+                if agent_id == 1:
+                    return self.b2_actions[0]
+                if agent_id == 2:
+                    return self.b3_actions[0]
 
-        current_action = self.actions[0]
-        self.actions = self.actions[1:]
-        return current_action
+        b1_current_action = self.b1_actions[0]
+        self.b1_actions = self.b1_actions[1:]
+        b2_current_action = self.b2_actions[0]
+        self.b2_actions = self.b2_actions[1:]
+        b3_current_action = self.b3_actions[0]
+        self.b3_actions = self.b3_actions[1:]
 
-
-
-
-        # if agent_id == 0 or agent_id == 3:
-        #     return self.policy_one.compute_single_action(observation_normalized)[0]
-        # elif agent_id == 1 or agent_id == 4:
-        #     return self.policy_two.compute_single_action(observation_normalized)[0]
-        # else:
-        #     return self.policy_three.compute_single_action(observation_normalized)[0]
+        if agent_id == 0:
+            return b1_current_action
+        if agent_id == 1:
+            return b2_current_action
+        if agent_id == 2:
+            return b3_current_action
 
     def calc_actions(self, obs):
         # Create PDDL Problem
@@ -57,11 +69,11 @@ class solution:
         plan_actions = self.extract_actions_from_plan_trace("pddl/plans/plan1_prob.pddl")
 
         # Convert actions to discrete
-        plan_actions_num = self.convert_actions(plan_actions)
+        b1_plan_actions_num, b2_plan_actions_num, b3_plan_actions_num = self.convert_actions(plan_actions)
 
         # plan_actions = [1,2,3]
         # plan_action = plan_actions[0] # or n step
-        return plan_actions_num
+        return b1_plan_actions_num, b2_plan_actions_num, b3_plan_actions_num
 
     def extract_actions_from_plan_trace(self, plane_trace_file: str):
         plan_actions = PddlPlusPlan()
@@ -76,8 +88,9 @@ class solution:
                     return plan_actions
                 if "heading" or "speed" in line:
                     action_name = (line.split(':')[1].split('[')[0])
-
-                    plan_actions.append(TimedAction(action_name, 0.0))
+                    action_time_step = float(line.split(':')[0])
+                    ta = TimedAction(action_name, action_time_step)
+                    plan_actions.append(ta)
                 if "syntax error" in line:
                     plan_actions.append(TimedAction("syntax error", 0.0))
                     break
@@ -180,42 +193,158 @@ class solution:
         out_file.close()
 
     def convert_actions(self, plan_actions):
-        plan_actions_num = []
+        b1_plan_actions_num = []
+        b2_plan_actions_num = []
+        b3_plan_actions_num = []
 
-        for n in range(len(plan_actions)):
-            if plan_actions[n].action_name.__contains__("full_speed"):
-                self.full_speed = True
-            if plan_actions[n].action_name.__contains__("half_speed"):
-                self.full_speed = False
-            if plan_actions[n].action_name.__contains__("heading_-135"):
-                self.heading = -135
-            if plan_actions[n].action_name.__contains__("heading_-90"):
-                self.heading = -90
-            if plan_actions[n].action_name.__contains__("heading_-45"):
-                self.heading = -45
-            if plan_actions[n].action_name.__contains__("heading_0"):
-                self.heading = 0
-            if plan_actions[n].action_name.__contains__("heading_45"):
-                self.heading = 45
-            if plan_actions[n].action_name.__contains__("heading_90"):
-                self.heading = 90
-            if plan_actions[n].action_name.__contains__("heading_135"):
-                self.heading = 135
-            if plan_actions[n].action_name.__contains__("heading_180"):
-                self.heading = 180
-            # if plan_actions[0].__contains__("noop"):
-            #     self.noop = True
+        actual_a_at_curr_time = self.preprocess_plan(plan_actions)
 
-            if self.noop:
-                plan_actions_num.append(16)
-            elif self.full_speed:
-                heading_to_action = {180: 0, 135: 1, 90: 2, 45: 3, 0: 4, -45: 5, -90: 6, -135: 7}
-            else:
-                heading_to_action = {180: 8, 135: 9, 90: 10, 45: 11, 0: 12, -45: 13, -90: 14, -135: 15}
-            if self.heading in heading_to_action:
-                plan_actions_num.append(heading_to_action[self.heading])
+        while len(actual_a_at_curr_time) > 0:
+            # actual_a_at_curr_time = self.preprocess_plan(plan_actions)
+            for n in range(len(actual_a_at_curr_time)):
+                if actual_a_at_curr_time[n].action_name.__contains__("full_speed") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_full_speed = True
+                if actual_a_at_curr_time[n].action_name.__contains__("half_speed") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_full_speed = False
+                if actual_a_at_curr_time[n].action_name.__contains__("full_speed") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_full_speed = True
+                if actual_a_at_curr_time[n].action_name.__contains__("half_speed") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_full_speed = False
+                if actual_a_at_curr_time[n].action_name.__contains__("full_speed") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_full_speed = True
+                if actual_a_at_curr_time[n].action_name.__contains__("half_speed") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_full_speed = False
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-135") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = -135
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-90") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = -90
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-45") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = -45
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_0") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = 0
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_45") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = 45
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_90") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = 90
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_135") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = 135
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_180") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = 180
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-135") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = -135
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-90") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = -90
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-45") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = -45
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_0") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = 0
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_45") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = 45
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_90") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = 90
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_135") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = 135
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_180") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = 180
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-135") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = -135
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-90") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = -90
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-45") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = -45
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_0") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = 0
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_45") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = 45
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_90") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = 90
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_135") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = 135
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_180") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = 180
 
-        return plan_actions_num
+                if actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    if self.b1_full_speed:
+                        heading_to_action = {180: 0, 135: 1, 90: 2, 45: 3, 0: 4, -45: 5, -90: 6, -135: 7}
+                    else:
+                        heading_to_action = {180: 8, 135: 9, 90: 10, 45: 11, 0: 12, -45: 13, -90: 14, -135: 15}
+                    if self.b1_heading in heading_to_action:
+                        b1_plan_actions_num.append(heading_to_action[self.b1_heading])
+                elif actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    if self.b2_full_speed:
+                        heading_to_action = {180: 0, 135: 1, 90: 2, 45: 3, 0: 4, -45: 5, -90: 6, -135: 7}
+                    else:
+                        heading_to_action = {180: 8, 135: 9, 90: 10, 45: 11, 0: 12, -45: 13, -90: 14, -135: 15}
+                    if self.b2_heading in heading_to_action:
+                        b2_plan_actions_num.append(heading_to_action[self.b2_heading])
+                else:
+                    if self.b3_full_speed:
+                        heading_to_action = {180: 0, 135: 1, 90: 2, 45: 3, 0: 4, -45: 5, -90: 6, -135: 7}
+                    else:
+                        heading_to_action = {180: 8, 135: 9, 90: 10, 45: 11, 0: 12, -45: 13, -90: 14, -135: 15}
+                    if self.b3_heading in heading_to_action:
+                        b3_plan_actions_num.append(heading_to_action[self.b3_heading])
+
+            self.curr_time += self.time_inc
+            self.curr_time = round(self.curr_time, 5) # wtf, 0.3 becomes 0.30000000000000004, so we do this
+
+            actual_a_at_curr_time = self.preprocess_plan(plan_actions)
+
+        return b1_plan_actions_num, b2_plan_actions_num, b3_plan_actions_num
+        #     # if plan_actions[0].__contains__("noop"):
+        #     #     self.noop = True
+        #
+        #     # if self.noop:
+        #     #     plan_actions_num.append(16)
+
+    def preprocess_plan(self, plan_actions):
+        actual_a_at_curr_time = []
+        list_a_at_curr_time = [a for a in plan_actions if a.start_at == self.curr_time]
+        # combine speed and heading actions into one action
+        b1_speed_related_a = [element for element in list_a_at_curr_time if
+                              "b1" in element.action_name and "speed" in element.action_name]
+        b1_heading_related_a = [element for element in list_a_at_curr_time if
+                                "b1" in element.action_name and "heading" in element.action_name]
+        if len(b1_heading_related_a) == 1 and len(b1_speed_related_a) == 1:
+            s = (b1_speed_related_a[0].action_name + "+" + b1_heading_related_a[0].action_name)
+            actual_a_at_curr_time.append(TimedAction(s, self.curr_time))
+        elif len(b1_heading_related_a) == 1 and len(b1_speed_related_a) == 0:
+            actual_a_at_curr_time.append(TimedAction(b1_heading_related_a[0].action_name, self.curr_time))
+        elif len(b1_heading_related_a) == 0 and len(b1_speed_related_a) == 1:
+            actual_a_at_curr_time.append(TimedAction(b1_speed_related_a[0].action_name, self.curr_time))
+        else:
+            pass
+
+        b2_speed_related_a = [element for element in list_a_at_curr_time if
+                              "b2" in element.action_name and "speed" in element.action_name]
+        b2_heading_related_a = [element for element in list_a_at_curr_time if
+                                "b2" in element.action_name and "heading" in element.action_name]
+        if len(b2_heading_related_a) == 1 and len(b2_speed_related_a) == 1:
+            s = (b2_speed_related_a[0].action_name + "+" + b2_heading_related_a[0].action_name)
+            actual_a_at_curr_time.append(TimedAction(s, self.curr_time))
+        elif len(b2_heading_related_a) == 1 and len(b2_speed_related_a) == 0:
+            actual_a_at_curr_time.append(TimedAction(b2_heading_related_a[0].action_name, self.curr_time))
+        elif len(b2_heading_related_a) == 0 and len(b2_speed_related_a) == 1:
+            actual_a_at_curr_time.append(TimedAction(b2_speed_related_a[0].action_name, self.curr_time))
+        else:
+            pass
+
+        b3_speed_related_a = [element for element in list_a_at_curr_time if
+                              "b3" in element.action_name and "speed" in element.action_name]
+        b3_heading_related_a = [element for element in list_a_at_curr_time if
+                                "b3" in element.action_name and "heading" in element.action_name]
+        if len(b3_heading_related_a) == 1 and len(b3_speed_related_a) == 1:
+            s = (b3_speed_related_a[0].action_name + "+" + b3_heading_related_a[0].action_name)
+            actual_a_at_curr_time.append(TimedAction(s, self.curr_time))
+        elif len(b3_heading_related_a) == 1 and len(b3_speed_related_a) == 0:
+            actual_a_at_curr_time.append(TimedAction(b3_heading_related_a[0].action_name, self.curr_time))
+        elif len(b3_heading_related_a) == 0 and len(b3_speed_related_a) == 1:
+            actual_a_at_curr_time.append(TimedAction(b3_speed_related_a[0].action_name, self.curr_time))
+        else:
+            pass
+
+        return actual_a_at_curr_time
+
 
 class PddlParserUtils:
     """
