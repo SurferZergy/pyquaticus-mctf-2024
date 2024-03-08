@@ -8,6 +8,7 @@
     (ready) (total_failure) 
     (adjustable_heading) ;; ensure agents only choose a single heading per time step (to reduce state space)
     (tagged_blue ?b - blue) (tagged_red ?r - red) (has_flag_blue ?b - blue) (has_flag_red ?r - red)
+    (blue_flag_at_blue_base) (red_flag_at_red_base)
   )
 
   (:functions
@@ -16,8 +17,9 @@
     ;; 
     (x_b ?b - blue) (y_b ?b - blue) (v_b ?b - blue) (heading ?b - blue) ;; blue agent numeric vars
     (x_r ?r - red) (y_r ?r - red) (v_r ?r - red) (heading_r ?r - red) ;; red agent numeric vars
+    (x_base_blue) (y_base_blue) (x_base_red) (y_base_red) ;; coordinates for each team's flag base
     (x_max) (x_min) (y_max) (y_min) ;; global numeric vars: size of world in meters =[160, 80]
-    (r_agent) (r_catch) (r_collision) ;; agent_radius = 2m, catch_radius = 10m, collision_radius = 2.2m
+    (r_agent) (r_catch) (r_collision) (r_capture) ;; agent_radius = 2m, catch_radius = 10m, collision_radius = 2.2m, (flag)capture_radius = 10m [need to verify, could be 7 or 8m as well]
     (max_cooldown_time) ;; cooldown after tagging someone = 30s, 
     (cooldown_time_blue ?b - blue) (cooldown_time_red ?r - red)
     (v_max) ;; max_speed = 1.5m/s
@@ -77,7 +79,7 @@
 
   ; (:action half_speed
   ;   :parameters (?b - blue)
-  ;   :precondition (and (ready) (not (total_failure)) (= (v_b ?b) (v_max)) )
+  ;   :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (= (v_b ?b) (v_max)) )
   ;   :effect (and 
   ;     (assign (v_b ?b) (/ (v_max) 2.0))
   ;   )
@@ -85,7 +87,7 @@
 
   ; (:action full_speed
   ;   :parameters (?b - blue)
-  ;   :precondition (and (ready) (not (total_failure)) (= (v_b ?b) (/ (v_max) 2.0)) )
+  ;   :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (= (v_b ?b) (/ (v_max) 2.0)) )
   ;   :effect (and 
   ;     (assign (v_b ?b) (/ (v_max) 2.0))
   ;   )
@@ -93,7 +95,7 @@
 
   ; (:action heading_-135
   ;   :parameters (?b - blue)
-  ;   :precondition (and (ready) (not (total_failure)) (not (= (heading ?b) -135.0)) (adjustable_heading) )
+  ;   :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) -135.0)) (adjustable_heading) )
   ;   :effect (and 
   ;     (assign (heading ?b) -135.0)
   ;     (not (adjustable_heading))
@@ -102,7 +104,7 @@
 
   (:action heading_-90
     :parameters (?b - blue)
-    :precondition (and (ready) (not (total_failure)) (not (= (heading ?b) -90.0)) (adjustable_heading) )
+    :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) -90.0)) (adjustable_heading) )
     :effect (and 
       (assign (heading ?b) -90.0)
       (not (adjustable_heading))
@@ -111,7 +113,7 @@
 
   ; (:action heading_-45
   ;   :parameters (?b - blue)
-  ;   :precondition (and (ready) (not (total_failure)) (not (= (heading ?b) -45.0)) (adjustable_heading) )
+  ;   :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) -45.0)) (adjustable_heading) )
   ;   :effect (and 
   ;     (assign (heading ?b) -45.0)
   ;     (not (adjustable_heading))
@@ -120,7 +122,7 @@
 
   (:action heading_0
     :parameters (?b - blue)
-    :precondition (and (ready) (not (total_failure)) (not (= (heading ?b) 0.0)) (adjustable_heading) )
+    :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) 0.0)) (adjustable_heading) )
     :effect (and 
       (assign (heading ?b) 0.0)
       (not (adjustable_heading))
@@ -129,7 +131,7 @@
 
   ; (:action heading_45
   ;   :parameters (?b - blue)
-  ;   :precondition (and (ready) (not (total_failure)) (not (= (heading ?b) 45.0)) (adjustable_heading) )
+  ;   :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) 45.0)) (adjustable_heading) )
   ;   :effect (and 
   ;     (assign (heading ?b) 45.0)
   ;     (not (adjustable_heading))
@@ -138,7 +140,7 @@
 
   (:action heading_90
     :parameters (?b - blue)
-    :precondition (and (ready) (not (total_failure)) (not (= (heading ?b) 90.0)) (adjustable_heading) )
+    :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) 90.0)) (adjustable_heading) )
     :effect (and 
       (assign (heading ?b) 90.0)
       (not (adjustable_heading))
@@ -147,7 +149,7 @@
 
   ; (:action heading_135
   ;   :parameters (?b - blue)
-  ;   :precondition (and (ready) (not (total_failure)) (not (= (heading ?b) 135.0)) (adjustable_heading) )
+  ;   :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) 135.0)) (adjustable_heading) )
   ;   :effect (and 
   ;     (assign (heading ?b) 135.0)
   ;     (not (adjustable_heading))
@@ -156,7 +158,7 @@
 
   (:action heading_180
     :parameters (?b - blue)
-    :precondition (and (ready) (not (total_failure)) (not (= (heading ?b) 180.0)) (adjustable_heading) )
+    :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) 180.0)) (adjustable_heading) )
     :effect (and 
       (assign (heading ?b) 180.0)
       (not (adjustable_heading))
@@ -171,8 +173,8 @@
 
   (:event blue_tagged_by_red
     :parameters (?b - blue ?r - red)
-    :precondition (and (>= (x_b ?b) (/ (x_max) 2)) (<= (cooldown_time_red ?r) 0.0) (not (tagged_blue ?b))
-      (< (^ (+ (^ (- (x_b ?b) (x_r ?r)) 2.0) (^ (- (y_b ?b) (y_r ?r)) 2.0)) 0.5) (r_collision))
+    :precondition (and (< (x_b ?b) (/ (x_max) 2)) (<= (cooldown_time_red ?r) 0.0) (not (tagged_blue ?b))
+      (< (^ (+ (^ (- (x_b ?b) (x_r ?r)) 2.0) (^ (- (y_b ?b) (y_r ?r)) 2.0)) 0.5) (r_catch))
     )
     :effect (and (tagged_blue ?b) 
       (assign (cooldown_time_red ?r) (max_cooldown_time))
@@ -181,11 +183,11 @@
 
   (:event red_tagged_by_blue
     :parameters (?b - blue ?r - red)
-    :precondition (and (<= (x_r ?r) (/ (x_max) 2)) (<= (cooldown_time_blue ?b) 0.0) (not (tagged_red ?r))
-      (< (^ (+ (^ (- (x_b ?b) (x_r ?r)) 2.0) (^ (- (y_b ?b) (y_r ?r)) 2.0)) 0.5) (r_collision))
+    :precondition (and (> (x_r ?r) (/ (x_max) 2)) (<= (cooldown_time_blue ?b) 0.0) (not (tagged_red ?r))
+      (< (^ (+ (^ (- (x_b ?b) (x_r ?r)) 2.0) (^ (- (y_b ?b) (y_r ?r)) 2.0)) 0.5) (r_catch))
     )
     :effect (and (tagged_red ?r) 
-      (assign (cooldown_time_blue ?b) (max_cooldown_time)) 
+      (assign (cooldown_time_blue ?b) (max_cooldown_time))
     )
   )
 
@@ -203,35 +205,45 @@
 
   (:event blue_captured_the_red_flag
     :parameters (?b - blue)
-    :precondition (and ())
-    :effect (and ()))
+    :precondition (and (not (has_red_flag ?b)) (red_flag_at_red_base)
+      (< (^ (+ (^ (- (x_b ?b) (x_base_red)) 2.0) (^ (- (y_b ?b) (y_base_red)) 2.0)) 0.5) (r_capture))
+    )
+    :effect (and (not (red_flag_at_red_base)) (has_red_flag ?b)) 
+  )
 
   (:event red_captured_the_blue_flag
     :parameters (?r - red)
-    :precondition (and ())
-    :effect (and ()))
-
-  (:process after_tag_retreat_blue
-    :parameters (?b - blue)
-    :precondition (and () )
-    :effect (and () ) 
+    :precondition (and (not (has_blue_flag ?r)) (blue_flag_at_blue_base)
+      (< (^ (+ (^ (- (x_r ?r) (x_base_blue)) 2.0) (^ (- (y_r ?r) (y_base_blue)) 2.0)) 0.5) (r_capture))
+    )
+    :effect (and (not (blue_flag_at_blue_base)) (has_blue_flag ?r))
   )
 
-  (:process after_tag_retreat_red
+  (:event untag_blue
     :parameters (?b - blue)
-    :precondition (and () )
-    :effect (and () ) 
+    :precondition (and (tagged_blue ?b) 
+      (< (^ (+ (^ (- (x_b ?b) (x_base_blue)) 2.0) (^ (- (y_b ?b) (y_base_blue)) 2.0)) 0.5) (r_capture)) 
+    )
+    :effect (and (not (tagged_blue ?b)) ) 
+  )
+
+  (:process untag_red
+    :parameters (?r - red)
+    :precondition (and (tagged_red ?r) 
+      (< (^ (+ (^ (- (x_r ?r) (x_base_red)) 2.0) (^ (- (y_r ?r) (y_base_red)) 2.0)) 0.5) (r_capture))
+    )
+    :effect (and (not (tagged_red ?r)) )
   )
 
   (:event blue_scores
     :parameters (?b - blue)
-    :precondition (and ())
+    :precondition (and (has_red_flag ?b) (> (x_b ?b) (/ (x_max) 2)) )
     :effect (and (increase (score_blue) 1.0))
   )
 
   (:event red_scores
     :parameters (?r - red)
-    :precondition (and ())
+    :precondition (and (has_blue_flag ?r) (< (x_r ?r) (/ (x_max) 2)))
     :effect (and (increase (score_red) 1.0))
   )
 
