@@ -20,6 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--render', help='Enable rendering', action='store_true')
     args = parser.parse_args()
     RENDER_MODE = 'human' if args.render else None #set to 'human' if you want rendered output
+    # RENDER_MODE = 'human'
 
     config_dict = config_dict_std
     config_dict["max_time"] = 600.0
@@ -56,6 +57,7 @@ if __name__ == '__main__':
         five = H_three.compute_action(new_obs)
         
         obs, reward, term, trunc, info = env.step({0:zero,1:one, 2:two, 3:three, 4:four, 5:five})
+        # print(env.players[0].heading)
         k =  list(term.keys())
         step += 1
         if term[k[0]] == True or trunc[k[0]]==True:

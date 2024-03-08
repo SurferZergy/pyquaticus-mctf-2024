@@ -19,42 +19,46 @@ class solution:
         self.b2_actions = []
         self.b3_actions = []
         self.n = 3 # number of actions b4 replan # need to set
-        self.b1_full_speed = True # need to
+        self.b1_full_speed = True # need to set
         self.b2_full_speed = True  # need to set
         self.b3_full_speed = True  # need to set
-        self.b1_heading = -135 # need to set
-        self.b2_heading = -135  # need to set
-        self.b3_heading = -135  # need to set
+        self.b1_heading = -90  # need to set, set to init env->players[n].heading
+        self.b2_heading = -90  # need to set, set to init env->players[n].heading
+        self.b3_heading = -90  # need to set, set to init env->players[n].heading
         self.curr_time = 0.0
         self.time_inc = 0.1
+
         # self.noop = False
 
 	#Given an observation return a valid action agent_id is agent that needs an action, observation space is the current normalized observation space for the specific agent
     def compute_action(self,agent_id:int, observation_normalized:list, observation:dict):
+        # return 6
         if self.replan:
             self.b1_actions, self.b2_actions,self.b3_actions = self.calc_actions(observation)[:self.n]
+            self.b1_actions = self.b1_actions[:self.n]
+            self.b2_actions = self.b2_actions[:self.n]
+            self.b3_actions = self.b3_actions[:self.n]
             self.replan = False
-        elif len(self.b1_actions) == 1: # last action, need to replan next time
-                self.replan = True
+        elif len(self.b1_actions) == 1 and len(self.b3_actions) == 1 and len(self.b2_actions) == 1: # last action, need to replan next time
                 if agent_id == 0:
                     return self.b1_actions[0]
                 if agent_id == 1:
                     return self.b2_actions[0]
                 if agent_id == 2:
+                    self.replan = True # agent_id=2 is always last one processed, so here we set replan to true after returning last action
                     return self.b3_actions[0]
 
-        b1_current_action = self.b1_actions[0]
-        self.b1_actions = self.b1_actions[1:]
-        b2_current_action = self.b2_actions[0]
-        self.b2_actions = self.b2_actions[1:]
-        b3_current_action = self.b3_actions[0]
-        self.b3_actions = self.b3_actions[1:]
-
         if agent_id == 0:
+            b1_current_action = self.b1_actions[0]
+            self.b1_actions = self.b1_actions[1:]
             return b1_current_action
         if agent_id == 1:
+            b2_current_action = self.b2_actions[0]
+            self.b2_actions = self.b2_actions[1:]
             return b2_current_action
         if agent_id == 2:
+            b3_current_action = self.b3_actions[0]
+            self.b3_actions = self.b3_actions[1:]
             return b3_current_action
 
     def calc_actions(self, obs):
@@ -193,6 +197,7 @@ class solution:
         out_file.close()
 
     def convert_actions(self, plan_actions):
+        self.curr_time = 0.0
         b1_plan_actions_num = []
         b2_plan_actions_num = []
         b3_plan_actions_num = []
