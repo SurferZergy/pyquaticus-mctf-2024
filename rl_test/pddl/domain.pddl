@@ -17,7 +17,7 @@
     ;; 
     (x_b ?b - blue) (y_b ?b - blue) (v_b ?b - blue) (heading ?b - blue) ;; blue agent numeric vars
     (x_r ?r - red) (y_r ?r - red) (v_r ?r - red) (heading_r ?r - red) ;; red agent numeric vars
-    (x_base_blue) (y_base_blue) (x_base_red) (y_base_red) ;; coordinates for each team's flag base
+    (x_base_blue) (y_base_blue) (x_base_red) (y_base_red) ;; coordinates for each team's flag base BLUE HOME=[120,40], RED HOME=[40,20]
     (x_max) (x_min) (y_max) (y_min) ;; global numeric vars: size of world in meters =[160, 80]
     (r_agent) (r_catch) (r_collision) (r_capture) ;; agent_radius = 2m, catch_radius = 10m, collision_radius = 2.2m, (flag)capture_radius = 10m [need to verify, could be 7 or 8m as well]
     (max_cooldown_time) ;; cooldown after tagging someone = 30s, 

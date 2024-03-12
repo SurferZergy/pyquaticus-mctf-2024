@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 *.json
+.idea/
 output/
 rl_test/ray_test/
 env-light/
