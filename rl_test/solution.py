@@ -43,6 +43,23 @@ class solution:
         #     self.b2_abs_loc = (observation['wall_3_distance'], observation['wall_0_distance'])
         # elif agent_id == 2:
         #     self.b3_abs_loc = (observation['wall_3_distance'], observation['wall_0_distance'])
+        if agent_id == 0:
+            print('wall 0 b', observation['wall_0_bearing'])
+
+            print('b2 rh', observation[('teammate_0', 'relative_heading')])
+            print('b3 rh', observation[('teammate_1', 'relative_heading')])
+            print('b2 b', observation[('teammate_0', 'bearing')])
+            print('b3 b', observation[('teammate_1', 'bearing')])
+
+            print('r1 rh', observation[('opponent_0', 'relative_heading')])
+            print('r2 rh', observation[('opponent_1', 'relative_heading')])
+            print('r3 rh', observation[('opponent_2', 'relative_heading')])
+            print('r1 b', observation[('opponent_0', 'bearing')])
+            print('r2 b', observation[('opponent_1', 'bearing')])
+            print('r3 b', observation[('opponent_2', 'bearing')])
+            return 5
+        else:
+            return 3
 
         if self.replan:
             self.b1_actions, self.b2_actions,self.b3_actions = self.calc_actions(observation, players)[:self.n]
@@ -151,12 +168,12 @@ class solution:
         pddl_problem.init.append(['=', ['x_b', 'r3'], players[5].pos[0]])
         pddl_problem.init.append(['=', ['y_b', 'r3'], players[5].pos[1]])
 
-        pddl_problem.init.append(['=', ['v_b', 'b1'], players[0].speed])
-        pddl_problem.init.append(['=', ['v_b', 'b2'], players[1].speed])
-        pddl_problem.init.append(['=', ['v_b', 'b3'], players[2].speed])
-        pddl_problem.init.append(['=', ['v_r', 'r1'], players[3].speed])
-        pddl_problem.init.append(['=', ['v_r', 'r2'], players[4].speed])
-        pddl_problem.init.append(['=', ['v_r', 'r3'], players[5].speed])
+        pddl_problem.init.append(['=', ['v_b', 'b1'], obs['speed']])
+        pddl_problem.init.append(['=', ['v_b', 'b2'], obs[('teammate_0', 'speed')]])
+        pddl_problem.init.append(['=', ['v_b', 'b3'], obs[('teammate_1', 'speed')]])
+        pddl_problem.init.append(['=', ['v_r', 'r1'], obs[('opponent_0', 'speed')]])
+        pddl_problem.init.append(['=', ['v_r', 'r2'], obs[('opponent_1', 'speed')]])
+        pddl_problem.init.append(['=', ['v_r', 'r3'], obs[('opponent_2', 'speed')]])
 
         pddl_problem.init.append(['=', ['heading_b', 'b1'], players[0].heading])
         pddl_problem.init.append(['=', ['heading_b', 'b2'], players[1].heading])
@@ -180,18 +197,17 @@ class solution:
         pddl_problem.init.append(['=', ['y_min'], '0'])
         pddl_problem.init.append(['=', ['max_cooldown_time'], '30'])
 
-        pddl_problem.init.append(['=', ['cooldown_time_blue', 'b1'], players[0].cantag_time])
-        pddl_problem.init.append(['=', ['cooldown_time_blue', 'b2'], players[1].cantag_time])
-        pddl_problem.init.append(['=', ['cooldown_time_blue', 'b3'], players[2].cantag_time])
-        pddl_problem.init.append(['=', ['cooldown_time_red', 'r1'], players[3].cantag_time])
-        pddl_problem.init.append(['=', ['cooldown_time_red', 'r2'], players[4].cantag_time])
-        pddl_problem.init.append(['=', ['cooldown_time_red', 'r3'], players[5].cantag_time])
+        pddl_problem.init.append(['=', ['cooldown_time_blue', 'b1'], obs['tagging_cooldown']])
+        pddl_problem.init.append(['=', ['cooldown_time_blue', 'b2'], obs[('teammate_0', 'tagging_cooldown')]])
+        pddl_problem.init.append(['=', ['cooldown_time_blue', 'b3'], obs[('teammate_1', 'tagging_cooldown')]])
+        pddl_problem.init.append(['=', ['cooldown_time_red', 'r1'], obs[('opponent_0', 'tagging_cooldown')]])
+        pddl_problem.init.append(['=', ['cooldown_time_red', 'r2'], obs[('opponent_1', 'tagging_cooldown')]])
+        pddl_problem.init.append(['=', ['cooldown_time_red', 'r3'], obs[('opponent_2', 'tagging_cooldown')]])
 
         pddl_problem.init.append(['=', ['v_max'], '1.5'])
 
         pddl_problem.init.append(['=', ['score_blue'], obs['team_score']])
         pddl_problem.init.append(['=', ['score_red'], obs['opponent_score']])
-        pddl_problem.init.append(['=', ['game_time'], '0']) # TODO
 
         pddl_problem.init.append(['ready'])
         pddl_problem.init.append(['adjustable_handling'])
