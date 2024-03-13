@@ -27,14 +27,25 @@ class solution:
         self.b3_heading = -90  # need to set, set to init env->players[n].heading
         self.curr_time = 0.0
         self.time_inc = 0.1
+        self.b1_abs_loc = (120, 60)
+        self.b2_abs_loc = (120, 40)
+        self.b3_abs_loc = (120, 20)
 
         # self.noop = False
 
 	#Given an observation return a valid action agent_id is agent that needs an action, observation space is the current normalized observation space for the specific agent
-    def compute_action(self,agent_id:int, observation_normalized:list, observation:dict):
-        # return 6
+    def compute_action(self,agent_id:int, observation_normalized:list, observation:dict, players):
+        # return 4
+
+        # if agent_id == 0:
+        #     self.b1_abs_loc = (observation['wall_3_distance'], observation['wall_0_distance'])
+        # elif agent_id == 1:
+        #     self.b2_abs_loc = (observation['wall_3_distance'], observation['wall_0_distance'])
+        # elif agent_id == 2:
+        #     self.b3_abs_loc = (observation['wall_3_distance'], observation['wall_0_distance'])
+
         if self.replan:
-            self.b1_actions, self.b2_actions,self.b3_actions = self.calc_actions(observation)[:self.n]
+            self.b1_actions, self.b2_actions,self.b3_actions = self.calc_actions(observation, players)[:self.n]
             self.b1_actions = self.b1_actions[:self.n]
             self.b2_actions = self.b2_actions[:self.n]
             self.b3_actions = self.b3_actions[:self.n]
@@ -61,13 +72,13 @@ class solution:
             self.b3_actions = self.b3_actions[1:]
             return b3_current_action
 
-    def calc_actions(self, obs):
+    def calc_actions(self, obs, players):
         # Create PDDL Problem
-        # prob = self.create_pddl_problem(self, obs)
-        # self.pddl_p_to_file(prob)
+        prob = self.create_pddl_problem(obs, players)
+        self.pddl_p_to_file(prob, 'prob.pddl')
 
         # Run PDDL
-        # plan, explored_states = nyx.runner("pddl/domain.pddl", "pddl/prob.pddl", ['-v', '-to:100', '-noplan', '-search:gbfs', '-custom_heuristic:42'])
+        plan, explored_states = nyx.runner("./pddl/domain.pddl", "./pddl/prob.pddl", ['-v', '-to:100', '-noplan', '-search:gbfs', '-custom_heuristic:42'])
 
         # Get actions from PDDL results
         plan_actions = self.extract_actions_from_plan_trace("pddl/plans/plan1_prob.pddl")
@@ -106,62 +117,92 @@ class solution:
         return plan_actions
 
 
-    def create_pddl_problem(self, obs):
+    def create_pddl_problem(self, obs, players):
         pddl_problem = PddlPlusProblem()
-        pddl_problem.domain = 'acq'
-        pddl_problem.name = 'acq-problem'
-        pddl_problem.metric = self.metric
+        pddl_problem.domain = 'mctf'
+        pddl_problem.name = 'mctf-problem'
+        pddl_problem.metric = 'minimize(total-time)'
         pddl_problem.objects = []
         pddl_problem.init = []
         pddl_problem.goal = []
 
 
         # objs
-        obs_theta = round(observation_array[2], 5)
-        obs_theta_dot = round(observation_array[3], 5)
-        obs_x = round(observation_array[0], 5)
-        obs_x_dot = round(observation_array[1], 5)
+        pddl_problem.objects.append(['b1', 'blue'])
+        pddl_problem.objects.append(['b2', 'blue'])
+        pddl_problem.objects.append(['b3', 'blue'])
+        pddl_problem.objects.append(['r1', 'red'])
+        pddl_problem.objects.append(['r2', 'red'])
+        pddl_problem.objects.append(['r3', 'red'])
 
-        # A dictionary with global problem parameters
-        problem_params = dict()
 
-        # Add constants fluents
-        for numeric_fluent in self.constant_numeric_fluents:
-            pddl_problem.init.append(['=', [numeric_fluent], round(self.constant_numeric_fluents[numeric_fluent],
-                                                                   CartPoleMetaModel.PLANNER_PRECISION)])  # TODO
-        for boolean_fluent in self.constant_boolean_fluents:
-            if self.constant_boolean_fluents[boolean_fluent]:
-                pddl_problem.init.append([boolean_fluent])
-            # else:
-            # pddl_problem.init.append(['not',[boolean_fluent]])
+        # init
+        pddl_problem.init.append(['=', ['x_b', 'b1'], players[0].pos[0]])
+        pddl_problem.init.append(['=', ['y_b', 'b1'], players[0].pos[1]])
+        pddl_problem.init.append(['=', ['x_b', 'b2'], players[1].pos[0]])
+        pddl_problem.init.append(['=', ['y_b', 'b2'], players[1].pos[1]])
+        pddl_problem.init.append(['=', ['x_b', 'b3'], players[2].pos[0]])
+        pddl_problem.init.append(['=', ['y_b', 'b3'], players[2].pos[1]])
 
-        # MAIN COMPONENTS: X and THETA + derivatives
-        pddl_problem.init.append(['=', ['x'], round(obs_x, CartPoleMetaModel.PLANNER_PRECISION)])
-        pddl_problem.init.append(['=', ['x_dot'], round(obs_x_dot, CartPoleMetaModel.PLANNER_PRECISION)])
-        pddl_problem.init.append(['=', ['theta'], round(obs_theta, CartPoleMetaModel.PLANNER_PRECISION)])
-        pddl_problem.init.append(['=', ['theta_dot'], round(obs_theta_dot, CartPoleMetaModel.PLANNER_PRECISION)])
-        pddl_problem.init.append(
-            ['=', ['F'], round(self.constant_numeric_fluents['force_mag'], CartPoleMetaModel.PLANNER_PRECISION)])
+        pddl_problem.init.append(['=', ['x_b', 'r1'], players[3].pos[0]])
+        pddl_problem.init.append(['=', ['y_b', 'r1'], players[3].pos[1]])
+        pddl_problem.init.append(['=', ['x_b', 'r2'], players[4].pos[0]])
+        pddl_problem.init.append(['=', ['y_b', 'r2'], players[4].pos[1]])
+        pddl_problem.init.append(['=', ['x_b', 'r3'], players[5].pos[0]])
+        pddl_problem.init.append(['=', ['y_b', 'r3'], players[5].pos[1]])
 
-        calc_temp = (self.constant_numeric_fluents['force_mag'] + (self.constant_numeric_fluents['m_pole'] *
-                                                                   self.constant_numeric_fluents['l_pole']) *
-                     obs_theta_dot ** 2 * math.sin(obs_theta)) / (
-                                self.constant_numeric_fluents['m_cart'] + self.constant_numeric_fluents['m_pole'])
-        calc_theta_ddot = (self.constant_numeric_fluents['gravity'] * math.sin(obs_theta) - math.cos(
-            obs_theta) * calc_temp) / (self.constant_numeric_fluents['l_pole'] * (
-                    4.0 / 3.0 - self.constant_numeric_fluents['m_pole'] * math.cos(obs_theta) ** 2 / (
-                        self.constant_numeric_fluents['m_cart'] + self.constant_numeric_fluents['m_pole'])))
-        calc_x_ddot = calc_temp - (self.constant_numeric_fluents['m_pole'] * self.constant_numeric_fluents[
-            'l_pole']) * calc_theta_ddot * math.cos(obs_theta) / (
-                                  self.constant_numeric_fluents['m_cart'] + self.constant_numeric_fluents['m_pole'])
+        pddl_problem.init.append(['=', ['v_b', 'b1'], players[0].speed])
+        pddl_problem.init.append(['=', ['v_b', 'b2'], players[1].speed])
+        pddl_problem.init.append(['=', ['v_b', 'b3'], players[2].speed])
+        pddl_problem.init.append(['=', ['v_r', 'r1'], players[3].speed])
+        pddl_problem.init.append(['=', ['v_r', 'r2'], players[4].speed])
+        pddl_problem.init.append(['=', ['v_r', 'r3'], players[5].speed])
 
-        pddl_problem.init.append(['=', ['x_ddot'], round(calc_x_ddot, CartPoleMetaModel.PLANNER_PRECISION)])
-        pddl_problem.init.append(['=', ['theta_ddot'], round(calc_theta_ddot, CartPoleMetaModel.PLANNER_PRECISION)])
+        pddl_problem.init.append(['=', ['heading_b', 'b1'], players[0].heading])
+        pddl_problem.init.append(['=', ['heading_b', 'b2'], players[1].heading])
+        pddl_problem.init.append(['=', ['heading_b', 'b3'], players[2].heading])
+        pddl_problem.init.append(['=', ['heading_r', 'r1'], players[3].heading])
+        pddl_problem.init.append(['=', ['heading_r', 'r2'], players[4].heading])
+        pddl_problem.init.append(['=', ['heading_r', 'r3'], players[5].heading])
 
-        # Add goal
-        # pddl_problem.goal.append(['pole_position'])
+        pddl_problem.init.append(['=', ['x_base_blue'], '140'])
+        pddl_problem.init.append(['=', ['y_base_blue'], '40'])
+        pddl_problem.init.append(['=', ['x_base_red'], '20'])
+        pddl_problem.init.append(['=', ['y_base_red'], '40'])
+        pddl_problem.init.append(['=', ['r_agent'], '2'])
+        pddl_problem.init.append(['=', ['r_catch'], '10'])
+        pddl_problem.init.append(['=', ['r_collision'], '2.2'])
+        pddl_problem.init.append(['=', ['r_capture'], '10'])
+
+        pddl_problem.init.append(['=', ['x_max'], '160'])
+        pddl_problem.init.append(['=', ['x_min'], '0'])
+        pddl_problem.init.append(['=', ['y_max'], '80'])
+        pddl_problem.init.append(['=', ['y_min'], '0'])
+        pddl_problem.init.append(['=', ['max_cooldown_time'], '30'])
+
+        pddl_problem.init.append(['=', ['cooldown_time_blue', 'b1'], players[0].cantag_time])
+        pddl_problem.init.append(['=', ['cooldown_time_blue', 'b2'], players[1].cantag_time])
+        pddl_problem.init.append(['=', ['cooldown_time_blue', 'b3'], players[2].cantag_time])
+        pddl_problem.init.append(['=', ['cooldown_time_red', 'r1'], players[3].cantag_time])
+        pddl_problem.init.append(['=', ['cooldown_time_red', 'r2'], players[4].cantag_time])
+        pddl_problem.init.append(['=', ['cooldown_time_red', 'r3'], players[5].cantag_time])
+
+        pddl_problem.init.append(['=', ['v_max'], '1.5'])
+
+        pddl_problem.init.append(['=', ['score_blue'], obs['team_score']])
+        pddl_problem.init.append(['=', ['score_red'], obs['opponent_score']])
+        pddl_problem.init.append(['=', ['game_time'], '0']) # TODO
+
+        pddl_problem.init.append(['ready'])
+        pddl_problem.init.append(['adjustable_handling'])
+        pddl_problem.init.append(['blue_flag_at_blue_base'])
+        pddl_problem.init.append(['red_flag_at_red_base'])
+
+
+        # goal
+        # # pddl_problem.goal.append(['pole_position'])
         pddl_problem.goal.append(['not', ['total_failure']])
-        pddl_problem.goal.append(['=', ['elapsed_time'], ['time_limit']])
+        pddl_problem.goal.append(['>=', ['score_blue'], '1'])
 
 
         return pddl_problem
@@ -170,7 +211,9 @@ class solution:
     def pddl_p_to_file(self, pddl_problem: PddlPlusProblem, output_file_name):
         parse_utils = PddlParserUtils()
 
-        out_file = open(output_file_name, "w")
+        dir = "./pddl/"
+        output = os.path.join(dir, output_file_name)
+        out_file = open(output, "w")
         out_file.write("(define(problem %s)\n" % pddl_problem.name)
         out_file.write("(:domain %s)\n" % pddl_problem.domain)
 

@@ -19,8 +19,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test against the evaluation used on the submission platform (3v3)')
     parser.add_argument('--render', help='Enable rendering', action='store_true')
     args = parser.parse_args()
-    RENDER_MODE = 'human' if args.render else None #set to 'human' if you want rendered output
-    # RENDER_MODE = 'human'
+    # RENDER_MODE = 'human' if args.render else None #set to 'human' if you want rendered output
+    RENDER_MODE = 'human'
 
     config_dict = config_dict_std
     config_dict["max_time"] = 600.0
@@ -49,9 +49,9 @@ if __name__ == '__main__':
         #Get normalized observation (for heuristic approaches)
         for k in obs:
             new_obs[k] = env.agent_obs_normalizer.unnormalized(obs[k])
-        zero = sol.compute_action(0,obs[0], new_obs[0])
-        one = sol.compute_action(1,obs[1],new_obs[1])
-        two = sol.compute_action(2,obs[2],new_obs[2])
+        zero = sol.compute_action(0,obs[0], new_obs[0], env.players)
+        one = sol.compute_action(1,obs[1],new_obs[1], env.players)
+        two = sol.compute_action(2,obs[2],new_obs[2], env.players)
         three = H_one.compute_action(new_obs)
         four = H_two.compute_action(new_obs)
         five = H_three.compute_action(new_obs)
