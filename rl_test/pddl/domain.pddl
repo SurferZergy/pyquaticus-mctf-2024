@@ -7,7 +7,7 @@
   (:predicates
     (ready) (total_failure) 
     (adjustable_heading) ;; ensure agents only choose a single heading per time step (to reduce state space)
-    (tagged_blue ?b - blue) (tagged_red ?r - red) (has_flag_blue ?b - blue) (has_flag_red ?r - red)
+    (tagged_blue ?b - blue) (tagged_red ?r - red) (has_blue_flag ?r - red) (has_red_flag ?b - blue)
     (blue_flag_at_blue_base) (red_flag_at_red_base)
   )
 
