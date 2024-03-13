@@ -25,6 +25,7 @@
     (v_max) ;; max_speed = 1.5m/s
     (score_blue) (score_red) 
     (game_time)
+    (elapsed_time)
   )
 
 
@@ -64,8 +65,8 @@
     :parameters (?b - blue)
     :precondition (and (ready) (not (total_failure)))
     :effect (and
-        (increase (x_b ?b) (* #t (* (@cos (heading ?b)) (v_b))) )
-        (increase (y_b ?b) (* #t (* (@sin (heading ?b)) (v_b))) )
+        (increase (x_b ?b) (* #t (* (@cos (heading ?b)) (v_b ?b))) )
+        (increase (y_b ?b) (* #t (* (@sin (heading ?b)) (v_b ?b))) )
     )
   )
 
