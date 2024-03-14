@@ -2,6 +2,7 @@ import numpy as np
 from pddl.pddl_plus import *
 from pddl.nyx import nyx
 import os
+import random
 # from ray.rllib.policy.policy import Policy
 #Need an added import for codalab competition submission?
 #Post an issue to the github and we will work to get it added into the system!
@@ -18,7 +19,7 @@ class solution:
         self.b1_actions = []
         self.b2_actions = []
         self.b3_actions = []
-        self.n = 3 # number of actions b4 replan # need to set
+        self.n = 10 # number of actions b4 replan # need to set
         self.b1_full_speed = True # need to set
         self.b2_full_speed = True  # need to set
         self.b3_full_speed = True  # need to set
@@ -43,27 +44,11 @@ class solution:
         #     self.b2_abs_loc = (observation['wall_3_distance'], observation['wall_0_distance'])
         # elif agent_id == 2:
         #     self.b3_abs_loc = (observation['wall_3_distance'], observation['wall_0_distance'])
-        if agent_id == 0:
-            print('wall 0 b', observation['wall_0_bearing'])
-
-            print('b2 rh', observation[('teammate_0', 'relative_heading')])
-            print('b3 rh', observation[('teammate_1', 'relative_heading')])
-            print('b2 b', observation[('teammate_0', 'bearing')])
-            print('b3 b', observation[('teammate_1', 'bearing')])
-
-            print('r1 rh', observation[('opponent_0', 'relative_heading')])
-            print('r2 rh', observation[('opponent_1', 'relative_heading')])
-            print('r3 rh', observation[('opponent_2', 'relative_heading')])
-            print('r1 b', observation[('opponent_0', 'bearing')])
-            print('r2 b', observation[('opponent_1', 'bearing')])
-            print('r3 b', observation[('opponent_2', 'bearing')])
-            return 5
-        else:
-            return 3
 
         if self.replan:
             self.b1_actions, self.b2_actions,self.b3_actions = self.calc_actions(observation, players)[:self.n]
             self.b1_actions = self.b1_actions[:self.n]
+            # print('b1 a', self.b1_actions)
             self.b2_actions = self.b2_actions[:self.n]
             self.b3_actions = self.b3_actions[:self.n]
             self.replan = False
@@ -95,7 +80,10 @@ class solution:
         self.pddl_p_to_file(prob, 'prob.pddl')
 
         # Run PDDL
-        plan, explored_states = nyx.runner("./pddl/domain.pddl", "./pddl/prob.pddl", ['-v', '-to:100', '-noplan', '-search:gbfs', '-custom_heuristic:42'])
+        try:
+            plan, explored_states = nyx.runner("./pddl/domain.pddl", "./pddl/prob.pddl", ['-v', '-to:100', '-noplan', '-search:bfs'])
+        except Exception as e:
+            print('no plan found, using default plan.', 'Error:', e)
 
         # Get actions from PDDL results
         plan_actions = self.extract_actions_from_plan_trace("pddl/plans/plan1_prob.pddl")
