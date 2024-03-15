@@ -2,6 +2,7 @@ import numpy as np
 from pddl.pddl_plus import *
 from pddl.nyx import nyx
 import os
+import math
 import random
 # from ray.rllib.policy.policy import Policy
 #Need an added import for codalab competition submission?
@@ -28,16 +29,90 @@ class solution:
         self.b3_heading = -90  # need to set, set to init env->players[n].heading
         self.curr_time = 0.0
         self.time_inc = 0.1
-        self.b1_abs_loc = (120, 60)
-        self.b2_abs_loc = (120, 40)
-        self.b3_abs_loc = (120, 20)
+        # self.b1_abs_loc = (120, 20)
+        # self.b2_abs_loc = (120, 40)
+        # self.b3_abs_loc = (120, 60)
 
         # self.noop = False
 
+    def convert_angle_to_pos_aka_clockwise(self, a):
+        if a < 0:
+            a += 360
+        return a
+
+    def calculate_new_point(self, x1, y1, distance, angle_degrees):
+        angle_radians = math.radians(angle_degrees)
+        x2 = x1 + distance * math.cos(angle_radians)
+        y2 = y1 + distance * math.sin(angle_radians)
+        return x2, y2
+
 	#Given an observation return a valid action agent_id is agent that needs an action, observation space is the current normalized observation space for the specific agent
     def compute_action(self,agent_id:int, observation_normalized:list, observation:dict, players):
-        # return 4
 
+        # if agent_id == 0:
+            # b2_wall_0_bearing = (180 - (observation[('wall_0_bearing')]+observation[('teammate_0', 'bearing')])) + observation[('teammate_0', 'relative_heading')]
+            # b3_wall_0_bearing = (180 - (observation[('wall_0_bearing')]+observation[('teammate_1', 'bearing')])) + observation[('teammate_1', 'relative_heading')]
+
+            # print('b2 calc',b2_wall_0_bearing, 'b3 calc', b3_wall_0_bearing)
+            #
+            # print('b1 real x', observation[('wall_2_distance')])
+            # print('b2 real y', observation[('wall_3_distance')])
+            #
+            # print('b1 wall 0', observation[('wall_0_bearing')])
+            # print('b1 wall 2', observation[('wall_2_bearing')])
+
+
+            # print('bb', observation[('teammate_0', 'bearing')])
+            # xb2, yb2 = self.calculate_new_point(observation[('wall_3_distance')], observation[('wall_2_distance')], observation[('teammate_0', 'distance')], abs(observation[('teammate_0', 'bearing')]))
+            #
+            # self.b1_abs_loc = (observation[('wall_3_distance')], observation[('wall_2_distance')])
+            # self.b1_heading = observation[('wall_0_bearing')]
+
+            # print('b1 wb', observation[('wall_3_bearing')], 'ob', observation[('teammate_0', 'bearing')])
+            # xb1 = observation[('wall_3_distance')]
+            # yb1 = observation[('wall_2_distance')]
+            # other_agent_dis = observation[('teammate_0', 'distance')]
+            # print('b1 loc', xb1, yb1)
+            # print('d', other_agent_dis)
+            # wall_bearing = observation[('wall_1_bearing')]
+            # print('maybe neg wall b', wall_bearing)
+            # other_agent_bearing_to_you = observation[('teammate_0', 'bearing')]
+            # print('maybe neg orh', other_agent_bearing_to_you)
+            # wall_bearing = self.convert_angle_to_pos_aka_clockwise(wall_bearing)
+            # print('pos wall b', wall_bearing)
+            # other_agent_bearing_to_you = self.convert_angle_to_pos_aka_clockwise(other_agent_bearing_to_you)
+            # print('pos orh', other_agent_bearing_to_you)
+            # other_agent_bearing_to_xaxis = abs(other_agent_bearing_to_you - wall_bearing)
+            # print('other_agent_bearing_to_xaxis', other_agent_bearing_to_xaxis)
+            # xb2, yb2 = self.calculate_new_point(xb1, yb1, other_agent_dis, other_agent_bearing_to_xaxis)
+            # print('xb2', xb2, 'yb2', yb2)
+
+        # elif agent_id == 1:
+        #     # print('b2 real b', observation[('wall_0_bearing')])
+        #     print('b2 real x', observation[('wall_3_distance')])
+        #     print('b2 real y', observation[('wall_2_distance')])
+        #     # self.b2_abs_loc = (observation[('wall_3_distance')], observation[('wall_2_distance')])
+        #     # self.b2_heading = observation[('wall_0_bearing')]
+        #
+        #
+        # elif agent_id == 2:
+        #     # print('b3 real b', observation[('wall_0_bearing')])
+        #     # print('b3 real x', observation[('wall_3_distance')])
+        #     # print('b3 real y', observation[('wall_2_distance')])
+        #     self.b3_abs_loc = (observation[('wall_3_distance')], observation[('wall_2_distance')])
+        #     self.b1_heading = observation[('wall_0_bearing')]
+        #
+        #
+        # # return 4
+        # if agent_id == 0:
+        #     return 7
+        # elif agent_id == 1:
+        #     if random.random() > 0.5:
+        #         return 3
+        #     else:
+        #         return 5
+        # elif agent_id == 2:
+        #     return 6
         # if agent_id == 0:
         #     self.b1_abs_loc = (observation['wall_3_distance'], observation['wall_0_distance'])
         # elif agent_id == 1:
@@ -140,21 +215,29 @@ class solution:
         pddl_problem.objects.append(['r2', 'red'])
         pddl_problem.objects.append(['r3', 'red'])
 
+        #calc positions
+        xb1 = obs[('wall_3_distance')]
+        yb1 = obs[('wall_2_distance')]
+        xb2, yb2 = self.calc_abs_pos(xb1, yb1, obs, 'teammate_0')
+        xb3, yb3 = self.calc_abs_pos(xb1, yb1, obs, 'teammate_1')
+        xr1, yr1 = self.calc_abs_pos(xb1, yb1, obs, 'opponent_0')
+        xr2, yr2 = self.calc_abs_pos(xb1, yb1, obs, 'opponent_1')
+        xr3, yr3 = self.calc_abs_pos(xb1, yb1, obs, 'opponent_2')
 
         # init
-        pddl_problem.init.append(['=', ['x_b', 'b1'], players[0].pos[0]])
-        pddl_problem.init.append(['=', ['y_b', 'b1'], players[0].pos[1]])
-        pddl_problem.init.append(['=', ['x_b', 'b2'], players[1].pos[0]])
-        pddl_problem.init.append(['=', ['y_b', 'b2'], players[1].pos[1]])
-        pddl_problem.init.append(['=', ['x_b', 'b3'], players[2].pos[0]])
-        pddl_problem.init.append(['=', ['y_b', 'b3'], players[2].pos[1]])
+        pddl_problem.init.append(['=', ['x_b', 'b1'], xb1])
+        pddl_problem.init.append(['=', ['y_b', 'b1'], yb1])
+        pddl_problem.init.append(['=', ['x_b', 'b2'], xb2])
+        pddl_problem.init.append(['=', ['y_b', 'b2'], yb2])
+        pddl_problem.init.append(['=', ['x_b', 'b3'], xb3])
+        pddl_problem.init.append(['=', ['y_b', 'b3'], yb3])
 
-        pddl_problem.init.append(['=', ['x_b', 'r1'], players[3].pos[0]])
-        pddl_problem.init.append(['=', ['y_b', 'r1'], players[3].pos[1]])
-        pddl_problem.init.append(['=', ['x_b', 'r2'], players[4].pos[0]])
-        pddl_problem.init.append(['=', ['y_b', 'r2'], players[4].pos[1]])
-        pddl_problem.init.append(['=', ['x_b', 'r3'], players[5].pos[0]])
-        pddl_problem.init.append(['=', ['y_b', 'r3'], players[5].pos[1]])
+        pddl_problem.init.append(['=', ['x_b', 'r1'], xr1])
+        pddl_problem.init.append(['=', ['y_b', 'r1'], yr1])
+        pddl_problem.init.append(['=', ['x_b', 'r2'], xr2])
+        pddl_problem.init.append(['=', ['y_b', 'r2'], yr2])
+        pddl_problem.init.append(['=', ['x_b', 'r3'], xr3])
+        pddl_problem.init.append(['=', ['y_b', 'r3'], yr3])
 
         pddl_problem.init.append(['=', ['v_b', 'b1'], obs['speed']])
         pddl_problem.init.append(['=', ['v_b', 'b2'], obs[('teammate_0', 'speed')]])
@@ -169,6 +252,9 @@ class solution:
         pddl_problem.init.append(['=', ['heading_r', 'r1'], players[3].heading])
         pddl_problem.init.append(['=', ['heading_r', 'r2'], players[4].heading])
         pddl_problem.init.append(['=', ['heading_r', 'r3'], players[5].heading])
+
+        # b2_wall_0_bearing = (180 - (obs[('wall_0_bearing')]+obs[('teammate_0', 'bearing')])) + obs[('teammate_0', 'relative_heading')]
+        # print(b2_wall_0_bearing)
 
         pddl_problem.init.append(['=', ['x_base_blue'], '140'])
         pddl_problem.init.append(['=', ['y_base_blue'], '40'])
@@ -210,6 +296,15 @@ class solution:
 
 
         return pddl_problem
+
+    def calc_abs_pos(self, xb1 , yb1, obs, agent):
+        other_agent_dis = obs[(agent, 'distance')]
+        wall_bearing = obs[('wall_1_bearing')] # needs to be the pos X axis
+        other_agent_bearing_to_you = obs[(agent, 'bearing')]
+        wall_bearing = self.convert_angle_to_pos_aka_clockwise(wall_bearing)
+        other_agent_bearing_to_you = self.convert_angle_to_pos_aka_clockwise(other_agent_bearing_to_you)
+        other_agent_bearing_to_xaxis = abs(other_agent_bearing_to_you - wall_bearing)
+        return self.calculate_new_point(xb1, yb1, other_agent_dis, other_agent_bearing_to_xaxis)
 
 
     def pddl_p_to_file(self, pddl_problem: PddlPlusProblem, output_file_name):
