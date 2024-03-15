@@ -72,6 +72,16 @@
   ; )
 
   ;; corresponds to action 2 in pyquaticus
+  (:action straight_ahead
+    :parameters (?b - blue)
+    :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (adjustable_bearing) (= (v_b ?b) (v_max)) )
+    :effect (and
+      (assign (turn_rate ?b) 0.0)
+      (not (adjustable_bearing))
+    )
+  )
+
+  ;; corresponds to action 2 in pyquaticus
   (:action turn_clockwise_90_full_speed
     :parameters (?b - blue)
     :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (adjustable_bearing) (= (v_b ?b) (v_max)) )
