@@ -49,9 +49,9 @@ if __name__ == '__main__':
         #Get normalized observation (for heuristic approaches)
         for k in obs:
             new_obs[k] = env.agent_obs_normalizer.unnormalized(obs[k])
-        zero = sol.compute_action(0,obs[0], new_obs[0], env.players)
-        one = sol.compute_action(1,obs[1],new_obs[1], env.players)
-        two = sol.compute_action(2,obs[2],new_obs[2], env.players)
+        zero = sol.compute_action(0,obs[0], new_obs[0])
+        one = sol.compute_action(1,obs[1],new_obs[1])
+        two = sol.compute_action(2,obs[2],new_obs[2])
         three = H_one.compute_action(new_obs)
         four = H_two.compute_action(new_obs)
         five = H_three.compute_action(new_obs)
