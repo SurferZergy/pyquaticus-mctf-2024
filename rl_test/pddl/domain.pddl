@@ -74,7 +74,7 @@
   ;; corresponds to action 4/12 in pyquaticus (depending on speed)
   (:action straight_ahead
     :parameters (?b - blue)
-    :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (adjustable_bearing) (= (v_b ?b) (v_max)) )
+    :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (adjustable_bearing) )
     :effect (and
       (assign (turn_rate ?b) 0.0)
       (not (adjustable_bearing))
