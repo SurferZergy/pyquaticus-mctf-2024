@@ -6,17 +6,17 @@
 
   (:predicates
     (ready) (total_failure)
-    (adjustable_heading) ;; ensure agents only choose a single heading per time step (to reduce state space)
+    (adjustable_bearing) ;; ensure agents only choose a single bearing per time step (to reduce state space)
     (tagged_blue ?b - blue) (tagged_red ?r - red) (has_blue_flag ?r - red) (has_red_flag ?b - blue)
     (blue_flag_at_blue_base) (red_flag_at_red_base)
   )
 
   (:functions
     ;; time discretization (max sim update) = 0.1s
-    ;; max_time = 360s
+    ;; max_time = 600s
     ;;
-    (x_b ?b - blue) (y_b ?b - blue) (v_b ?b - blue) (heading ?b - blue) ;; blue agent numeric vars
-    (x_r ?r - red) (y_r ?r - red) (v_r ?r - red) (heading_r ?r - red) ;; red agent numeric vars
+    (x_b ?b - blue) (y_b ?b - blue) (v_b ?b - blue) (bearing ?b - blue) ;; blue agent numeric vars
+    (x_r ?r - red) (y_r ?r - red) (v_r ?r - red) (bearing_r ?r - red) ;; red agent numeric vars
     (x_base_blue) (y_base_blue) (x_base_red) (y_base_red) ;; coordinates for each team's flag base BLUE HOME=[140,40], RED HOME=[20,40]
     (x_max) (x_min) (y_max) (y_min) ;; global numeric vars: size of world in meters =[160, 80]
     (r_agent) (r_catch) (r_collision) (r_capture) ;; agent_radius = 2m, catch_radius = 10m, collision_radius = 2.2m, (flag)capture_radius = 10m [need to verify, could be 7 or 8m as well]
@@ -27,31 +27,6 @@
     (game_time)
     (elapsed_time)
   )
-
-
-  ; (:event e1
-  ;     :parameters ()
-  ;     :precondition (and (ready) (not (total_failure)))
-  ;     :effect (and
-  ;
-  ;     )
-  ; )
-
-  ; (:process p1
-  ;   :parameters ()
-  ;   :precondition (and (ready) (not (total_failure)))
-  ;   :effect (and
-  ;
-  ;   )
-  ; )
-
-  ; (:action a1
-  ;   :parameters ()
-  ;   :precondition (and (ready) (not (total_failure)))
-  ;   :effect (and
-  ;
-  ;   )
-  ; )
 
   (:process time_keeping
     :parameters ()
@@ -65,16 +40,18 @@
     :parameters (?b - blue)
     :precondition (and (ready) (not (total_failure)))
     :effect (and
-        (increase (x_b ?b) (* #t (* (@cos (heading ?b)) (v_b ?b))) )
-        (increase (y_b ?b) (* #t (* (@sin (heading ?b)) (v_b ?b))) )
+        (increase (x_b ?b) (* #t (* (@sin (@radians (bearing ?b))) (v_b ?b))) )
+        (increase (y_b ?b) (* #t (* (@cos (@radians (bearing ?b))) (v_b ?b))) )
+        (increase (bearing ?b) (* #t (turn_rate ?b)) )
+        ;; WP: the bearing update may need to go before the position update, depending how it's implemented in pyquaticus
     )
   )
 
-  (:event reset_heading
+  (:event reset_bearing
       :parameters ()
-      :precondition (and (ready) (not (total_failure)) (not (adjustable_heading)) )
+      :precondition (and (ready) (not (total_failure)) (not (adjustable_bearing)) )
       :effect (and
-        (adjustable_heading)
+        (adjustable_bearing)
       )
   )
 
@@ -94,77 +71,46 @@
   ;   )
   ; )
 
-  ; (:action heading_-135
-  ;   :parameters (?b - blue)
-  ;   :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) -135.0)) (adjustable_heading) )
-  ;   :effect (and
-  ;     (assign (heading ?b) -135.0)
-  ;     (not (adjustable_heading))
-  ;   )
-  ; )
-
-  (:action heading_-90
+  ;; corresponds to action 2 in pyquaticus
+  (:action turn_clockwise_90_full_speed
     :parameters (?b - blue)
-    :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) -90.0)) (adjustable_heading) )
+    :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (adjustable_bearing) (= (v_b ?b) (v_max)) )
     :effect (and
-      (assign (heading ?b) -90.0)
-      (not (adjustable_heading))
+      (assign (turn_rate ?b) 17.489)
+      (not (adjustable_bearing))
     )
   )
 
-  ; (:action heading_-45
-  ;   :parameters (?b - blue)
-  ;   :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) -45.0)) (adjustable_heading) )
-  ;   :effect (and
-  ;     (assign (heading ?b) -45.0)
-  ;     (not (adjustable_heading))
-  ;   )
-  ; )
-
-  (:action heading_0
+  ;; corresponds to action 6 in pyquaticus
+  (:action turn_counter_clockwise_90_full_speed
     :parameters (?b - blue)
-    :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) 0.0)) (adjustable_heading) )
+    :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (adjustable_bearing) (= (v_b ?b) (v_max)) )
     :effect (and
-      (assign (heading ?b) 0.0)
-      (not (adjustable_heading))
+      (assign (turn_rate ?b) -17.489)
+      (not (adjustable_bearing))
     )
   )
 
-  ; (:action heading_45
+  ;; corresponds to action 10 in pyquaticus
+  ; (:action turn_clockwise_90_half_speed
   ;   :parameters (?b - blue)
-  ;   :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) 45.0)) (adjustable_heading) )
+  ;   :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (adjustable_bearing) (= (v_b ?b) (/ (v_max) 2)) )
   ;   :effect (and
-  ;     (assign (heading ?b) 45.0)
-  ;     (not (adjustable_heading))
+  ;     (assign (turn_rate ?b) 8.167)
+  ;     (not (adjustable_bearing))
   ;   )
   ; )
 
-  (:action heading_90
-    :parameters (?b - blue)
-    :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) 90.0)) (adjustable_heading) )
-    :effect (and
-      (assign (heading ?b) 90.0)
-      (not (adjustable_heading))
-    )
-  )
-
-  ; (:action heading_135
+  ;; corresponds to action 14 in pyquaticus
+  ; (:action turn_counter_clockwise_90_half_speed
   ;   :parameters (?b - blue)
-  ;   :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) 135.0)) (adjustable_heading) )
+  ;   :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (adjustable_bearing) (= (v_b ?b) (/ (v_max) 2)) )
   ;   :effect (and
-  ;     (assign (heading ?b) 135.0)
-  ;     (not (adjustable_heading))
+  ;     (assign (turn_rate ?b) -8.167)
+  ;     (not (adjustable_bearing))
   ;   )
   ; )
 
-  (:action heading_180
-    :parameters (?b - blue)
-    :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (not (= (heading ?b) 180.0)) (adjustable_heading) )
-    :effect (and
-      (assign (heading ?b) 180.0)
-      (not (adjustable_heading))
-    )
-  )
 
   (:event out_of_bounds
     :parameters (?b - blue)
