@@ -373,62 +373,7 @@ class solution:
         self.curr_time += self.time_inc
         self.curr_time = round(self.curr_time, 5) # wtf, 0.3 becomes 0.30000000000000004, so we do this
 
-            # actual_a_at_curr_time = self.preprocess_plan(plan_actions)
-
         return b1_plan_actions_num, b2_plan_actions_num, b3_plan_actions_num
-        #     # if plan_actions[0].__contains__("noop"):
-        #     #     self.noop = True
-        #
-        #     # if self.noop:
-        #     #     plan_actions_num.append(16)
-
-    def preprocess_plan(self, plan_actions):
-        actual_a_at_curr_time = []
-        list_a_at_curr_time = [a for a in plan_actions if a.start_at == self.curr_time]
-        # combine speed and heading actions into one action
-        b1_speed_related_a = [element for element in list_a_at_curr_time if
-                              "b1" in element.action_name and "speed" in element.action_name]
-        b1_heading_related_a = [element for element in list_a_at_curr_time if
-                                "b1" in element.action_name and "heading" in element.action_name]
-        if len(b1_heading_related_a) == 1 and len(b1_speed_related_a) == 1:
-            s = (b1_speed_related_a[0].action_name + "+" + b1_heading_related_a[0].action_name)
-            actual_a_at_curr_time.append(TimedAction(s, self.curr_time))
-        elif len(b1_heading_related_a) == 1 and len(b1_speed_related_a) == 0:
-            actual_a_at_curr_time.append(TimedAction(b1_heading_related_a[0].action_name, self.curr_time))
-        elif len(b1_heading_related_a) == 0 and len(b1_speed_related_a) == 1:
-            actual_a_at_curr_time.append(TimedAction(b1_speed_related_a[0].action_name, self.curr_time))
-        else:
-            pass
-
-        b2_speed_related_a = [element for element in list_a_at_curr_time if
-                              "b2" in element.action_name and "speed" in element.action_name]
-        b2_heading_related_a = [element for element in list_a_at_curr_time if
-                                "b2" in element.action_name and "heading" in element.action_name]
-        if len(b2_heading_related_a) == 1 and len(b2_speed_related_a) == 1:
-            s = (b2_speed_related_a[0].action_name + "+" + b2_heading_related_a[0].action_name)
-            actual_a_at_curr_time.append(TimedAction(s, self.curr_time))
-        elif len(b2_heading_related_a) == 1 and len(b2_speed_related_a) == 0:
-            actual_a_at_curr_time.append(TimedAction(b2_heading_related_a[0].action_name, self.curr_time))
-        elif len(b2_heading_related_a) == 0 and len(b2_speed_related_a) == 1:
-            actual_a_at_curr_time.append(TimedAction(b2_speed_related_a[0].action_name, self.curr_time))
-        else:
-            pass
-
-        b3_speed_related_a = [element for element in list_a_at_curr_time if
-                              "b3" in element.action_name and "speed" in element.action_name]
-        b3_heading_related_a = [element for element in list_a_at_curr_time if
-                                "b3" in element.action_name and "heading" in element.action_name]
-        if len(b3_heading_related_a) == 1 and len(b3_speed_related_a) == 1:
-            s = (b3_speed_related_a[0].action_name + "+" + b3_heading_related_a[0].action_name)
-            actual_a_at_curr_time.append(TimedAction(s, self.curr_time))
-        elif len(b3_heading_related_a) == 1 and len(b3_speed_related_a) == 0:
-            actual_a_at_curr_time.append(TimedAction(b3_heading_related_a[0].action_name, self.curr_time))
-        elif len(b3_heading_related_a) == 0 and len(b3_speed_related_a) == 1:
-            actual_a_at_curr_time.append(TimedAction(b3_speed_related_a[0].action_name, self.curr_time))
-        else:
-            pass
-
-        return actual_a_at_curr_time
 
 
 class PddlParserUtils:
