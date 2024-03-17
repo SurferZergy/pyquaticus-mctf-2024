@@ -350,30 +350,98 @@ class solution:
         b2_plan_actions_num = []
         b3_plan_actions_num = []
 
-        for n in range(len(plan_actions)):
-            if plan_actions[n].action_name.__contains__("straight_ahead") and plan_actions[n].action_name.__contains__("b1"):
-                b1_plan_actions_num.append(4)
-            if plan_actions[n].action_name.__contains__("straight_ahead") and plan_actions[n].action_name.__contains__("b2"):
-                b2_plan_actions_num.append(4)
-            if plan_actions[n].action_name.__contains__("straight_ahead") and plan_actions[n].action_name.__contains__("b3"):
-                b3_plan_actions_num.append(4)
-            if plan_actions[n].action_name.__contains__("turn_clockwise_90_full_speed") and plan_actions[n].action_name.__contains__("b1"):
-                b1_plan_actions_num.append(2)
-            if plan_actions[n].action_name.__contains__("turn_clockwise_90_full_speed") and plan_actions[n].action_name.__contains__("b2"):
-                b2_plan_actions_num.append(2)
-            if plan_actions[n].action_name.__contains__("turn_clockwise_90_full_speed") and plan_actions[n].action_name.__contains__("b3"):
-                b3_plan_actions_num.append(2)
-            if plan_actions[n].action_name.__contains__("turn_counter_clockwise_90_full_speed") and plan_actions[n].action_name.__contains__("b1"):
-                b1_plan_actions_num.append(6)
-            if plan_actions[n].action_name.__contains__("turn_counter_clockwise_90_full_speed") and plan_actions[n].action_name.__contains__("b2"):
-                b2_plan_actions_num.append(6)
-            if plan_actions[n].action_name.__contains__("turn_counter_clockwise_90_full_speed") and plan_actions[n].action_name.__contains__("b3"):
-                b3_plan_actions_num.append(6)
+        actual_a_at_curr_time = self.preprocess_plan(plan_actions)
 
-        self.curr_time += self.time_inc
-        self.curr_time = round(self.curr_time, 5) # wtf, 0.3 becomes 0.30000000000000004, so we do this
+        while len(actual_a_at_curr_time) > 0:
+            actual_a_at_curr_time = self.preprocess_plan(plan_actions)
+            for n in range(len(actual_a_at_curr_time)):
+                if actual_a_at_curr_time[n].action_name.__contains__("full_speed") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_full_speed = True
+                if actual_a_at_curr_time[n].action_name.__contains__("half_speed") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_full_speed = False
+                if actual_a_at_curr_time[n].action_name.__contains__("full_speed") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_full_speed = True
+                if actual_a_at_curr_time[n].action_name.__contains__("half_speed") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_full_speed = False
+                if actual_a_at_curr_time[n].action_name.__contains__("full_speed") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_full_speed = True
+                if actual_a_at_curr_time[n].action_name.__contains__("half_speed") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_full_speed = False
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-135") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = -135
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-90") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = -90
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-45") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = -45
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_0") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = 0
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_45") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = 45
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_90") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = 90
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_135") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = 135
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_180") and actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    self.b1_heading = 180
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-135") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = -135
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-90") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = -90
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-45") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = -45
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_0") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = 0
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_45") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = 45
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_90") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = 90
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_135") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = 135
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_180") and actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    self.b2_heading = 180
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-135") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = -135
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-90") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = -90
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_-45") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = -45
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_0") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = 0
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_45") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = 45
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_90") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = 90
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_135") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = 135
+                if actual_a_at_curr_time[n].action_name.__contains__("heading_180") and actual_a_at_curr_time[n].action_name.__contains__("b3"):
+                    self.b3_heading = 180
 
-            # actual_a_at_curr_time = self.preprocess_plan(plan_actions)
+                if actual_a_at_curr_time[n].action_name.__contains__("b1"):
+                    if self.b1_full_speed:
+                        heading_to_action = {180: 0, 135: 1, 90: 2, 45: 3, 0: 4, -45: 5, -90: 6, -135: 7}
+                    else:
+                        heading_to_action = {180: 8, 135: 9, 90: 10, 45: 11, 0: 12, -45: 13, -90: 14, -135: 15}
+                    if self.b1_heading in heading_to_action:
+                        b1_plan_actions_num.append(heading_to_action[self.b1_heading])
+                elif actual_a_at_curr_time[n].action_name.__contains__("b2"):
+                    if self.b2_full_speed:
+                        heading_to_action = {180: 0, 135: 1, 90: 2, 45: 3, 0: 4, -45: 5, -90: 6, -135: 7}
+                    else:
+                        heading_to_action = {180: 8, 135: 9, 90: 10, 45: 11, 0: 12, -45: 13, -90: 14, -135: 15}
+                    if self.b2_heading in heading_to_action:
+                        b2_plan_actions_num.append(heading_to_action[self.b2_heading])
+                else:
+                    if self.b3_full_speed:
+                        heading_to_action = {180: 0, 135: 1, 90: 2, 45: 3, 0: 4, -45: 5, -90: 6, -135: 7}
+                    else:
+                        heading_to_action = {180: 8, 135: 9, 90: 10, 45: 11, 0: 12, -45: 13, -90: 14, -135: 15}
+                    if self.b3_heading in heading_to_action:
+                        b3_plan_actions_num.append(heading_to_action[self.b3_heading])
+
+            self.curr_time += self.time_inc
+            self.curr_time = round(self.curr_time, 5) # wtf, 0.3 becomes 0.30000000000000004, so we do this
+
+            actual_a_at_curr_time = self.preprocess_plan(plan_actions)
 
         return b1_plan_actions_num, b2_plan_actions_num, b3_plan_actions_num
         #     # if plan_actions[0].__contains__("noop"):
