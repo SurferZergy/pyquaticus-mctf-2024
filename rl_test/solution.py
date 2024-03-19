@@ -252,9 +252,9 @@ class solution:
         pddl_problem.init.append(['=', ['v_r', 'r2'], obs[('opponent_1', 'speed')]])
         pddl_problem.init.append(['=', ['v_r', 'r3'], obs[('opponent_2', 'speed')]])
 
-        pddl_problem.init.append(['=', ['heading_b', 'b1'], self.b1_heading])
-        pddl_problem.init.append(['=', ['heading_b', 'b2'], self.b2_heading])
-        pddl_problem.init.append(['=', ['heading_b', 'b3'], self.b3_heading])
+        pddl_problem.init.append(['=', ['bearing', 'b1'], self.b1_heading])
+        pddl_problem.init.append(['=', ['bearing', 'b2'], self.b2_heading])
+        pddl_problem.init.append(['=', ['bearing', 'b3'], self.b3_heading])
         # pddl_problem.init.append(['=', ['heading_r', 'r1'], players[3].heading])
         # pddl_problem.init.append(['=', ['heading_r', 'r2'], players[4].heading])
         # pddl_problem.init.append(['=', ['heading_r', 'r3'], players[5].heading])
