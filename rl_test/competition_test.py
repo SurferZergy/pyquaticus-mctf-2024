@@ -19,8 +19,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Test against the evaluation used on the submission platform (3v3)')
     parser.add_argument('--render', help='Enable rendering', action='store_true')
     args = parser.parse_args()
-    # RENDER_MODE = 'human' if args.render else None #set to 'human' if you want rendered output
-    RENDER_MODE = 'human'
+    RENDER_MODE = 'human' if args.render else None #set to 'human' if you want rendered output
+    # RENDER_MODE = 'human'
 
     config_dict = config_dict_std
     config_dict["max_time"] = 600.0

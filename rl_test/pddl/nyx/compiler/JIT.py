@@ -1,7 +1,7 @@
 from typing import Tuple, Callable
 import math
 
-from numba import njit, float64
+# from numba import njit, float64
 
 # @njit(float64(float64, float64))
 # def fast_round(some_float, np):
@@ -12,7 +12,7 @@ from numba import njit, float64
 #     else:
 #         return int(some_float * PRECISION - 0.5) / PRECISION
 
-@njit(float64(float64, float64),fastmath=True)
+# @njit(float64(float64, float64),fastmath=True)
 def fast_round(some_float, np):
     # fast_round 1
     return round(some_float, np)

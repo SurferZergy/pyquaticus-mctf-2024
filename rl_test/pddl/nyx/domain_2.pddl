@@ -40,7 +40,7 @@
     :parameters (?b - blue)
     :precondition (and (ready) (not (total_failure)))
     :effect (and
-        (increase (x_b ?b) (* #t (* (@sin (@radians (bearing ?b))) (v_b ?b))) )
+        (decrease (x_b ?b) (* #t (* (@sin (@radians (bearing ?b))) (v_b ?b))) )
         (increase (y_b ?b) (* #t (* (@cos (@radians (bearing ?b))) (v_b ?b))) )
         (increase (bearing ?b) (* #t (turn_rate ?b)) )
         ;; WP: the bearing update may need to go before the position update, depending how it's implemented in pyquaticus
@@ -86,7 +86,7 @@
     :parameters (?b - blue)
     :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (adjustable_bearing) (= (v_b ?b) (v_max)) )
     :effect (and
-      (assign (turn_rate ?b) 17.489)
+      (assign (turn_rate ?b) 0.34978)
       (not (adjustable_bearing))
     )
   )
@@ -96,7 +96,7 @@
     :parameters (?b - blue)
     :precondition (and (not (tagged_blue ?b)) (not (total_failure)) (adjustable_bearing) (= (v_b ?b) (v_max)) )
     :effect (and
-      (assign (turn_rate ?b) -17.489)
+      (assign (turn_rate ?b) -0.34978)
       (not (adjustable_bearing))
     )
   )
@@ -194,12 +194,13 @@
 
   (:event blue_scores
     :parameters (?b - blue)
+    ;:precondition (and (has_red_flag ?b) (or (>= (x_b ?b) (- (x_base_blue) 2)) (<= (x_b ?b) (+ (x_base_blue) 2))) (or (>= (y_b ?b) (- (y_base_blue) 2)) (<= (y_b ?b) (+ (y_base_blue) 2))) )
     :precondition (and (has_red_flag ?b) (> (x_b ?b) (/ (x_max) 2)) )
     :effect (and (increase (score_blue) 1.0))
   )
 
   (:event red_scores
-    :parameters (?r - red)
+    :parameters (?r - red)g
     :precondition (and (has_blue_flag ?r) (< (x_r ?r) (/ (x_max) 2)))
     :effect (and (increase (score_red) 1.0))
   )

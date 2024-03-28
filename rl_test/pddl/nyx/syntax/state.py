@@ -4,8 +4,8 @@
 import copy
 import math
 
-import syntax.constants as constants
-from syntax.visited_state import VisitedState
+from . import constants
+from .visited_state import VisitedState
 
 
 class State:

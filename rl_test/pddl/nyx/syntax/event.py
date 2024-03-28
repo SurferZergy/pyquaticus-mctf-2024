@@ -4,7 +4,7 @@
 import itertools
 import re
 
-from compiler.HappeningMixin import HappeningMixin
+from ..compiler.HappeningMixin import HappeningMixin
 
 
 class Event(HappeningMixin):

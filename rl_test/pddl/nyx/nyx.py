@@ -1,12 +1,12 @@
 # from PDDL import PDDL_Parser
 # from toolz import cons
 
-from planner import Planner
+from .planner import Planner
 import pprint
 import csv
 import matplotlib.pyplot as plt
 from matplotlib import style
-import syntax.constants as constants
+from .syntax import constants as constants
 import sys
 import time
 import os, shutil
@@ -221,6 +221,7 @@ def runner(dom_file, prob_file, args_list: []):
         print('\t\tTime: ' + str(round(total_time,3)))
         print('\t\tStates Explored: ' + str(my_plnr.explored_states))
         print('\n=================================================\n')
+        return False
     else:
         count_gs = 1
         print("\n")
@@ -259,6 +260,7 @@ def runner(dom_file, prob_file, args_list: []):
 
     del my_plnr
     gc.collect()
+    return True
 
 def process_goal(plan_obj, planner_obj, plan_save_file):
 

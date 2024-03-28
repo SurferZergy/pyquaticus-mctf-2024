@@ -1,5 +1,5 @@
-from syntax.state import State
-import syntax.constants as constants
+from ..syntax.state import State
+from ..syntax import constants
 
 
 def external_function(input_state: State) -> State:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
-from syntax.action import Action
-from numba import njit, float64
+from .action import Action
+# from numba import njit, float64
 
 
 # -----------------------------------------------
@@ -63,7 +63,7 @@ EXPAND_TIME_PASSING = False
 FULL_TRACE = False
 
 
-@njit(float64(float64, float64),fastmath=True)
+# @njit(float64(float64, float64),fastmath=True)
 def fast_round(some_float, np):
     # fast_round 1
     return round(some_float, np)

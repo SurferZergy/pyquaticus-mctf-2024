@@ -4,14 +4,14 @@ import bisect
 import collections
 from hmac import new
 
-import heuristic_functions as heuristic_functions
-from PDDL import PDDL_Parser
-import syntax.constants as constants
+from . import heuristic_functions
+from .PDDL import PDDL_Parser
+from .syntax import constants as constants
 import time, copy, sys
-from syntax.visited_state import VisitedState
-from syntax.state import State
+from .syntax.visited_state import VisitedState
+from .syntax.state import State
 
-import semantic_attachments.semantic_attachment as semantic_attachment
+from .semantic_attachments import semantic_attachment
 
 class Planner:
 

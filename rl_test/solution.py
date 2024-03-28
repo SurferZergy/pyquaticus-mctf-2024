@@ -18,23 +18,33 @@ class solution:
     def __init__(self):
         self.replan = True
         self.b1_actions = []
-        self.b2_actions = []
-        self.b3_actions = []
-        self.n = 10 # number of actions b4 replan # need to set
+        # self.b2_actions = []
+        # self.b3_actions = []
+        self.n = 90 # number of actions b4 replan # need to set
         self.b1_full_speed = True # need to set
-        self.b2_full_speed = True  # need to set
-        self.b3_full_speed = True  # need to set
-        self.b1_heading = 90  # set to wall 0 bearing
-        self.b2_heading = 90  # set to wall 0 bearing
-        self.b3_heading = 90  # set to wall 0 bearing
-        self.curr_time = 0.0
-        self.time_inc = 0.1
+        # self.b2_full_speed = True  # need to set
+        # self.b3_full_speed = True  # need to set
+        self.b1_heading = 100  # set to wall 0 bearing
+        # self.b2_heading = 90  # set to wall 0 bearing
+        # self.b3_heading = 90  # set to wall 0 bearing
+        # self.curr_time = 0.0
+        # self.time_inc = 0.1
         # self.noop = False
+        # self.tmp = []
+        self.steps_2_turn = 132//3
+        self.steps_2_move_1_cell = 200//3
+        self.c = 0
+        # for _ in range(self.steps_2_turn):
+        #     self.tmp.append(2) #up
+        # # for _ in range (self.steps_2_turn):
+        # #     self.tmp.append(6) #left
+        # for _ in range(130):
+        #     self.tmp.append(4) #keep going
+        # for _ in range(self.steps_2_turn * 2):
+        #     self.tmp.append(6) #turn around
+        # for _ in range(self.steps_2_move_1_cell * 2):
+        #     self.tmp.append(4)
 
-    def convert_angle_to_pos_aka_clockwise(self, a):
-        if a < 0:
-            a += 360
-        return a
 
     def calculate_new_point(self, x1, y1, distance, angle_degrees):
         angle_radians = math.radians(angle_degrees)
@@ -45,136 +55,67 @@ class solution:
 	#Given an observation return a valid action agent_id is agent that needs an action, observation space is the current normalized observation space for the specific agent
     def compute_action(self,agent_id:int, observation_normalized:list, observation:dict):
 
-        # if agent_id == 0:
-        #     b1wzb = observation[('wall_0_bearing')]
-        #
-        #     xb1 = observation[('wall_3_distance')]
-        #     yb1 = observation[('wall_2_distance')]
-        #     other_agent_dis = observation[('teammate_0', 'distance')]
-        #     wall_bearing = observation[('wall_1_bearing')]
-        #     other_agent_bearing_to_you = observation[('teammate_0', 'bearing')]
-        #     wall_bearing = self.convert_angle_to_pos_aka_clockwise(wall_bearing)
-        #     other_agent_bearing_to_you = self.convert_angle_to_pos_aka_clockwise(other_agent_bearing_to_you)
-        #     other_agent_bearing_to_xaxis = abs(other_agent_bearing_to_you - wall_bearing)
-        #     xb2, yb2 = self.calculate_new_point(xb1, yb1, other_agent_dis, other_agent_bearing_to_xaxis)
-        #     print('b1w0b', b1wzb)
-        #     b = observation[('teammate_0', 'bearing')]
-        #     print('b', b)
-        #     rh = (360-observation[('teammate_0', 'relative_heading')]) % 360
-        #     print('rh', rh)
-        #     answer = (abs(b) + b1wzb) - rh
-        #     print('answer', answer)
-        #     print('yb2', yb2,'yb1', yb1)
-        #     if yb2 < yb1:
-        #         b2wzb = 180 - answer
-        #     else:
-        #         b2wzb = answer
-        #     print('b2w0b', b2wzb)
+        if agent_id == 1:
+            self.b1_heading = (observation[('wall_0_bearing')] + 360) % 360
+            xb1 = observation[('wall_3_distance')]
+            yb1 = observation[('wall_2_distance')]
 
-            # b2_wall_0_bearing = (180 - (observation[('wall_0_bearing')]+observation[('teammate_0', 'bearing')])) + observation[('teammate_0', 'relative_heading')]
-            # b3_wall_0_bearing = (180 - (observation[('wall_0_bearing')]+observation[('teammate_1', 'bearing')])) + observation[('teammate_1', 'relative_heading')]
+            #adjust bearing
+            if (len(self.b1_actions) == 1 or all(e == 4 for e in self.b1_actions[:5])) and ((4 <= self.b1_heading <= 86) or (94 <= self.b1_heading <= 176) or (184 <= self.b1_heading <= 266) or (276 <= self.b1_heading <= 356)):
+                if 0 < self.b1_heading < 45 or 90 < self.b1_heading < 135 or 180 < self.b1_heading < 225 or 270 < self.b1_heading < 315:
+                    return 2
+                else:
+                    return 6
 
-            # print('b2 calc',b2_wall_0_bearing, 'b3 calc', b3_wall_0_bearing)
-            #
-            # print('b1 real x', observation[('wall_2_distance')])
-            # print('b2 real y', observation[('wall_3_distance')])
-            #
-            # print('b1 wall 0', observation[('wall_0_bearing')])
-            # print('b1 wall 2', observation[('wall_2_bearing')])
+            if self.replan:
+                self.b1_actions = self.calc_actions(observation)[:self.n]
+                self.replan = False
+            elif len(self.b1_actions) == 1: # last action, need to replan next time
+                self.replan = True
+                return self.b1_actions[0]
 
-
-            # print('bb', observation[('teammate_0', 'bearing')])
-            # xb2, yb2 = self.calculate_new_point(observation[('wall_3_distance')], observation[('wall_2_distance')], observation[('teammate_0', 'distance')], abs(observation[('teammate_0', 'bearing')]))
-            #
-            # self.b1_abs_loc = (observation[('wall_3_distance')], observation[('wall_2_distance')])
-            # self.b1_heading = observation[('wall_0_bearing')]
-
-            # print('b1 wb', observation[('wall_3_bearing')], 'ob', observation[('teammate_0', 'bearing')])
-            # xb1 = observation[('wall_3_distance')]
-            # yb1 = observation[('wall_2_distance')]
-            # other_agent_dis = observation[('teammate_0', 'distance')]
-            # print('b1 loc', xb1, yb1)
-            # print('d', other_agent_dis)
-            # wall_bearing = observation[('wall_1_bearing')]
-            # print('maybe neg wall b', wall_bearing)
-            # other_agent_bearing_to_you = observation[('teammate_0', 'bearing')]
-            # print('maybe neg orh', other_agent_bearing_to_you)
-            # wall_bearing = self.convert_angle_to_pos_aka_clockwise(wall_bearing)
-            # print('pos wall b', wall_bearing)
-            # other_agent_bearing_to_you = self.convert_angle_to_pos_aka_clockwise(other_agent_bearing_to_you)
-            # print('pos orh', other_agent_bearing_to_you)
-            # other_agent_bearing_to_xaxis = abs(other_agent_bearing_to_you - wall_bearing)
-            # print('other_agent_bearing_to_xaxis', other_agent_bearing_to_xaxis)
-            # xb2, yb2 = self.calculate_new_point(xb1, yb1, other_agent_dis, other_agent_bearing_to_xaxis)
-            # print('xb2', xb2, 'yb2', yb2)
-        if agent_id == 0:
-            self.b1_heading = observation[('wall_0_bearing')]
-        elif agent_id == 1:
-            self.b2_heading = observation[('wall_0_bearing')]
-        elif agent_id == 2:
-            self.b3_heading = observation[('wall_0_bearing')]
-
-        # print(self.b1_heading, self.b2_heading, self.b3_heading)
-
-        # if agent_id == 0:
-        #     return 7
-        # elif agent_id == 1:
-        #     if random.random() > 0.5:
-        #         return 3
-        #     else:
-        #         return 5
-        # elif agent_id == 2:
-        #     return 6
-
-        if self.replan:
-            self.b1_actions, self.b2_actions,self.b3_actions = self.calc_actions(observation)[:self.n]
-            self.b1_actions = self.b1_actions[:self.n]
-            # print('b1 a', self.b1_actions)
-            self.b2_actions = self.b2_actions[:self.n]
-            self.b3_actions = self.b3_actions[:self.n]
-            self.replan = False
-        elif len(self.b1_actions) == 1 and len(self.b3_actions) == 1 and len(self.b2_actions) == 1: # last action, need to replan next time
-                if agent_id == 0:
-                    return self.b1_actions[0]
-                if agent_id == 1:
-                    return self.b2_actions[0]
-                if agent_id == 2:
-                    self.replan = True # agent_id=2 is always last one processed, so here we set replan to true after returning last action
-                    return self.b3_actions[0]
-
-        if agent_id == 0:
+            self.c += 1
             b1_current_action = self.b1_actions[0]
             self.b1_actions = self.b1_actions[1:]
+            # print(b1_current_action, 'step', self.c)
             return b1_current_action
-        if agent_id == 1:
-            b2_current_action = self.b2_actions[0]
-            self.b2_actions = self.b2_actions[1:]
-            return b2_current_action
+
+        if agent_id == 0:
+            return 2
         if agent_id == 2:
-            b3_current_action = self.b3_actions[0]
-            self.b3_actions = self.b3_actions[1:]
-            return b3_current_action
+            return 6
 
     def calc_actions(self, obs):
+        backup_plan = []
         # Create PDDL Problem
         prob = self.create_pddl_problem(obs)
         self.pddl_p_to_file(prob, 'prob.pddl')
 
         # Run PDDL
+        dir = os.path.dirname(os.path.realpath(__file__))+'/pddl/'
         try:
-            plan, explored_states = nyx.runner("./pddl/domain.pddl", "./pddl/prob.pddl", ['-v', '-to:100', '-noplan', '-search:bfs'])
+            # nyx.runner("./pddl/domain.pddl", "./pddl/prob.pddl", ['-v', 't:5', '-to:15', '-noplan', '-search:gbfs', 'custom_h:1'])
+            # nyx.runner("./pddl/domain.pddl", "./pddl/nyx/prob_2.pddl", ['-v', 't:5', '-to:30', '-search:gbfs', 'custom_h:1'])
+            plan_found = nyx.runner(dir+"domain.pddl", dir+"prob.pddl", ['-v', '-to:30', '-search:bfs'])
+            if not plan_found:
+                for _ in range (30):
+                    backup_plan.append(4)
+                for _ in range(self.steps_2_turn*4):
+                    backup_plan.append(2)
+                return backup_plan
         except Exception as e:
             print('no plan found, using default plan.', 'Error:', e)
 
         # Get actions from PDDL results
-        plan_actions = self.extract_actions_from_plan_trace("pddl/plans/plan1_prob.pddl")
+        plan_actions = self.extract_actions_from_plan_trace(dir+"plans/plan1_prob.pddl")
+        # plan_actions = self.extract_actions_from_plan_trace("./pddl/plans/test_plan.pddl")
 
         # Convert actions to discrete
-        b1_plan_actions_num, b2_plan_actions_num, b3_plan_actions_num = self.convert_actions(plan_actions)
+        b1_plan_actions_num = self.convert_actions(plan_actions)
 
         # plan_actions = [1,2,3]
         # plan_action = plan_actions[0] # or n step
-        return b1_plan_actions_num, b2_plan_actions_num, b3_plan_actions_num
+        return b1_plan_actions_num
 
     def extract_actions_from_plan_trace(self, plane_trace_file: str):
         plan_actions = PddlPlusPlan()
@@ -187,7 +128,7 @@ class solution:
                     # if the planner ran out of memory:
                     # change the goal to killing a single pig to make the problem easier and try again with one fewer pig
                     return plan_actions
-                if "straight_ahead" or "clockwise_90_full_speed" in line:
+                if "blue_move" in line:
                     action_name = (line.split(':')[1].split('[')[0])
                     action_time_step = float(line.split(':')[0])
                     ta = TimedAction(action_name, action_time_step)
@@ -215,108 +156,132 @@ class solution:
 
         # objs
         pddl_problem.objects.append(['b1', 'blue'])
-        pddl_problem.objects.append(['b2', 'blue'])
-        pddl_problem.objects.append(['b3', 'blue'])
+        # pddl_problem.objects.append(['b2', 'blue'])
+        # pddl_problem.objects.append(['b3', 'blue'])
         pddl_problem.objects.append(['r1', 'red'])
         pddl_problem.objects.append(['r2', 'red'])
         pddl_problem.objects.append(['r3', 'red'])
+        for i in range (1,8):
+            for j in range (1,16):
+                pddl_problem.objects.append(['cell'+str(j)+'_'+str(i), 'cell'])
+
 
         #calc positions
         xb1 = obs[('wall_3_distance')]
         yb1 = obs[('wall_2_distance')]
-        xb2, yb2 = self.calc_abs_pos(xb1, yb1, obs, 'teammate_0')
-        xb3, yb3 = self.calc_abs_pos(xb1, yb1, obs, 'teammate_1')
+        # xb2, yb2 = self.calc_abs_pos(xb1, yb1, obs, 'teammate_0')
+        # xb3, yb3 = self.calc_abs_pos(xb1, yb1, obs, 'teammate_1')
         xr1, yr1 = self.calc_abs_pos(xb1, yb1, obs, 'opponent_0')
         xr2, yr2 = self.calc_abs_pos(xb1, yb1, obs, 'opponent_1')
         xr3, yr3 = self.calc_abs_pos(xb1, yb1, obs, 'opponent_2')
 
         # init
-        pddl_problem.init.append(['=', ['x_b', 'b1'], xb1])
-        pddl_problem.init.append(['=', ['y_b', 'b1'], yb1])
-        pddl_problem.init.append(['=', ['x_b', 'b2'], xb2])
-        pddl_problem.init.append(['=', ['y_b', 'b2'], yb2])
-        pddl_problem.init.append(['=', ['x_b', 'b3'], xb3])
-        pddl_problem.init.append(['=', ['y_b', 'b3'], yb3])
+        xc, yc = self.translate_coord_to_row_col(xb1, yb1)
+        pddl_problem.init.append(['=', ['brow', 'b1'], yc])
+        pddl_problem.init.append(['=', ['bcol', 'b1'], xc])
+        # pddl_problem.init.append(['=', ['brow', 'b1'], 8]) #to trigger no plan found
+        # pddl_problem.init.append(['=', ['bcol', 'b1'], 8])
 
-        pddl_problem.init.append(['=', ['x_b', 'r1'], xr1])
-        pddl_problem.init.append(['=', ['y_b', 'r1'], yr1])
-        pddl_problem.init.append(['=', ['x_b', 'r2'], xr2])
-        pddl_problem.init.append(['=', ['y_b', 'r2'], yr2])
-        pddl_problem.init.append(['=', ['x_b', 'r3'], xr3])
-        pddl_problem.init.append(['=', ['y_b', 'r3'], yr3])
+        # pddl_problem.init.append(['=', ['x_b', 'b2'], xb2])
+        # pddl_problem.init.append(['=', ['y_b', 'b2'], yb2])
+        # pddl_problem.init.append(['=', ['x_b', 'b3'], xb3])
+        # pddl_problem.init.append(['=', ['y_b', 'b3'], yb3])
 
-        pddl_problem.init.append(['=', ['v_b', 'b1'], obs['speed']])
-        pddl_problem.init.append(['=', ['v_b', 'b2'], obs[('teammate_0', 'speed')]])
-        pddl_problem.init.append(['=', ['v_b', 'b3'], obs[('teammate_1', 'speed')]])
-        pddl_problem.init.append(['=', ['v_r', 'r1'], obs[('opponent_0', 'speed')]])
-        pddl_problem.init.append(['=', ['v_r', 'r2'], obs[('opponent_1', 'speed')]])
-        pddl_problem.init.append(['=', ['v_r', 'r3'], obs[('opponent_2', 'speed')]])
+        xc, yc = self.translate_coord_to_row_col(xr1, yr1)
+        pddl_problem.init.append(['=', ['rrow', 'r1'], yc])
+        pddl_problem.init.append(['=', ['rcol', 'r1'], xc])
+        xc, yc = self.translate_coord_to_row_col(xr2, yr2)
+        pddl_problem.init.append(['=', ['rrow', 'r2'], yc])
+        pddl_problem.init.append(['=', ['rcol', 'r2'], xc])
+        xc, yc = self.translate_coord_to_row_col(xr3, yr3)
+        pddl_problem.init.append(['=', ['rrow', 'r3'], yc])
+        pddl_problem.init.append(['=', ['rcol', 'r3'], xc])
 
-        pddl_problem.init.append(['=', ['bearing', 'b1'], self.b1_heading])
-        pddl_problem.init.append(['=', ['bearing', 'b2'], self.b2_heading])
-        pddl_problem.init.append(['=', ['bearing', 'b3'], self.b3_heading])
-        # pddl_problem.init.append(['=', ['heading_r', 'r1'], players[3].heading])
-        # pddl_problem.init.append(['=', ['heading_r', 'r2'], players[4].heading])
-        # pddl_problem.init.append(['=', ['heading_r', 'r3'], players[5].heading])
+        pddl_problem.init.append(['=', ['rbrow'], '4'])
+        pddl_problem.init.append(['=', ['rbcol'], '2'])
+        pddl_problem.init.append(['=', ['bbrow'], '4'])
+        pddl_problem.init.append(['=', ['bbcol'], '14'])
 
-        # b2_wall_0_bearing = (180 - (obs[('wall_0_bearing')]+obs[('teammate_0', 'bearing')])) + obs[('teammate_0', 'relative_heading')]
-        # print(b2_wall_0_bearing)
+        has_flag = obs[('has_flag')]
+        if has_flag:
+            pddl_problem.init.append(['blue_has_flag', 'b1'])
+        else:
+            pddl_problem.init.append(['red_flag_at_red_base'])
 
-        pddl_problem.init.append(['=', ['x_base_blue'], '140'])
-        pddl_problem.init.append(['=', ['y_base_blue'], '40'])
-        pddl_problem.init.append(['=', ['x_base_red'], '20'])
-        pddl_problem.init.append(['=', ['y_base_red'], '40'])
-        pddl_problem.init.append(['=', ['r_agent'], '2'])
-        pddl_problem.init.append(['=', ['r_catch'], '10'])
-        pddl_problem.init.append(['=', ['r_collision'], '2.2'])
-        pddl_problem.init.append(['=', ['r_capture'], '10'])
+        for i in range(1,8):
+            for j in range(1,16):
+                pddl_problem.init.append(['=', ['col', 'cell'+str(j)+'_'+str(i)], str(j)])
+                pddl_problem.init.append(['=', ['row', 'cell' + str(j) + '_' + str(i)], str(i)])
 
-        pddl_problem.init.append(['=', ['x_max'], '160'])
-        pddl_problem.init.append(['=', ['x_min'], '0'])
-        pddl_problem.init.append(['=', ['y_max'], '80'])
-        pddl_problem.init.append(['=', ['y_min'], '0'])
-        pddl_problem.init.append(['=', ['max_cooldown_time'], '30'])
-
-        pddl_problem.init.append(['=', ['cooldown_time_blue', 'b1'], obs['tagging_cooldown']])
-        pddl_problem.init.append(['=', ['cooldown_time_blue', 'b2'], obs[('teammate_0', 'tagging_cooldown')]])
-        pddl_problem.init.append(['=', ['cooldown_time_blue', 'b3'], obs[('teammate_1', 'tagging_cooldown')]])
-        pddl_problem.init.append(['=', ['cooldown_time_red', 'r1'], obs[('opponent_0', 'tagging_cooldown')]])
-        pddl_problem.init.append(['=', ['cooldown_time_red', 'r2'], obs[('opponent_1', 'tagging_cooldown')]])
-        pddl_problem.init.append(['=', ['cooldown_time_red', 'r3'], obs[('opponent_2', 'tagging_cooldown')]])
-
-        pddl_problem.init.append(['=', ['v_max'], '1.5'])
-
-        pddl_problem.init.append(['=', ['score_blue'], obs['team_score']])
-        pddl_problem.init.append(['=', ['score_red'], obs['opponent_score']])
-
-        pddl_problem.init.append(['ready'])
-        pddl_problem.init.append(['adjustable_handling'])
-        pddl_problem.init.append(['blue_flag_at_blue_base'])
-        pddl_problem.init.append(['red_flag_at_red_base'])
+        # pddl_problem.init.append(['=', ['x_base_blue'], '140'])
+        # pddl_problem.init.append(['=', ['y_base_blue'], '40'])
+        # pddl_problem.init.append(['=', ['x_base_red'], '20'])
+        # pddl_problem.init.append(['=', ['y_base_red'], '40'])
+        # pddl_problem.init.append(['=', ['r_agent'], '2'])
+        # pddl_problem.init.append(['=', ['r_catch'], '10'])
+        # pddl_problem.init.append(['=', ['r_collision'], '2.2'])
+        # pddl_problem.init.append(['=', ['r_capture'], '10'])
+        #
+        # pddl_problem.init.append(['=', ['x_max'], '160'])
+        # pddl_problem.init.append(['=', ['x_min'], '0'])
+        # pddl_problem.init.append(['=', ['y_max'], '80'])
+        # pddl_problem.init.append(['=', ['y_min'], '0'])
+        # pddl_problem.init.append(['=', ['max_cooldown_time'], '30'])
+        #
+        # pddl_problem.init.append(['=', ['cooldown_time_blue', 'b1'], obs['tagging_cooldown']])
+        # pddl_problem.init.append(['=', ['cooldown_time_blue', 'b2'], obs[('teammate_0', 'tagging_cooldown')]])
+        # pddl_problem.init.append(['=', ['cooldown_time_blue', 'b3'], obs[('teammate_1', 'tagging_cooldown')]])
+        # pddl_problem.init.append(['=', ['cooldown_time_red', 'r1'], obs[('opponent_0', 'tagging_cooldown')]])
+        # pddl_problem.init.append(['=', ['cooldown_time_red', 'r2'], obs[('opponent_1', 'tagging_cooldown')]])
+        # pddl_problem.init.append(['=', ['cooldown_time_red', 'r3'], obs[('opponent_2', 'tagging_cooldown')]])
+        #
+        # pddl_problem.init.append(['=', ['v_max'], '1.5'])
+        #
+        # pddl_problem.init.append(['=', ['score_blue'], obs['team_score']])
+        # pddl_problem.init.append(['=', ['score_red'], obs['opponent_score']])
+        #
+        # pddl_problem.init.append(['ready'])
+        # pddl_problem.init.append(['adjustable_handling'])
+        # pddl_problem.init.append(['blue_flag_at_blue_base'])
+        # pddl_problem.init.append(['red_flag_at_red_base'])
 
 
         # goal
         # # pddl_problem.goal.append(['pole_position'])
-        pddl_problem.goal.append(['not', ['total_failure']])
-        pddl_problem.goal.append(['>=', ['score_blue'], '1'])
+        # pddl_problem.goal.append(['not', ['total_failure']])
+        pddl_problem.goal.append(['=', ['brow', 'b1'], '4'])
+        pddl_problem.goal.append(['=', ['bcol', 'b1'], '12'])
+        pddl_problem.goal.append(['blue_has_flag', 'b1'])
+        pddl_problem.goal.append(['not', ['blue_collide', 'b1']])
 
 
         return pddl_problem
+
+    def translate_coord_to_row_col(self, xb1, yb1):
+        xc = round(xb1 / 10)
+        if xc > 15:
+            xc = 15
+        yc = round(yb1 / 10)
+        if yc > 7:
+            yc = 7
+        return xc, yc
 
     def calc_abs_pos(self, xb1 , yb1, obs, agent):
         other_agent_dis = obs[(agent, 'distance')]
         wall_bearing = obs[('wall_1_bearing')] # needs to be the pos X axis
         other_agent_bearing_to_you = obs[(agent, 'bearing')]
-        wall_bearing = self.convert_angle_to_pos_aka_clockwise(wall_bearing)
-        other_agent_bearing_to_you = self.convert_angle_to_pos_aka_clockwise(other_agent_bearing_to_you)
-        other_agent_bearing_to_xaxis = abs(other_agent_bearing_to_you - wall_bearing)
+        other_agent_bearing_to_xaxis = wall_bearing - other_agent_bearing_to_you
+        # wall_bearing = self.convert_angle_to_pos_aka_clockwise(wall_bearing)
+        # other_agent_bearing_to_you = self.convert_angle_to_pos_aka_clockwise(other_agent_bearing_to_you)
+        # other_agent_bearing_to_xaxis = other_agent_bearing_to_you - wall_bearing
         return self.calculate_new_point(xb1, yb1, other_agent_dis, other_agent_bearing_to_xaxis)
 
 
     def pddl_p_to_file(self, pddl_problem: PddlPlusProblem, output_file_name):
         parse_utils = PddlParserUtils()
 
-        dir = "./pddl/"
+        # dir = "./pddl/"
+        dir = os.path.dirname(os.path.realpath(__file__))+'/pddl/'
         output = os.path.join(dir, output_file_name)
         out_file = open(output, "w")
         out_file.write("(define(problem %s)\n" % pddl_problem.name)
@@ -345,35 +310,98 @@ class solution:
         out_file.close()
 
     def convert_actions(self, plan_actions):
-        self.curr_time = 0.0
+        # self.curr_time = 0.0
         b1_plan_actions_num = []
-        b2_plan_actions_num = []
-        b3_plan_actions_num = []
 
         for n in range(len(plan_actions)):
-            if plan_actions[n].action_name.__contains__("straight_ahead") and plan_actions[n].action_name.__contains__("b1"):
-                b1_plan_actions_num.append(4)
-            if plan_actions[n].action_name.__contains__("straight_ahead") and plan_actions[n].action_name.__contains__("b2"):
-                b2_plan_actions_num.append(4)
-            if plan_actions[n].action_name.__contains__("straight_ahead") and plan_actions[n].action_name.__contains__("b3"):
-                b3_plan_actions_num.append(4)
-            if plan_actions[n].action_name.__contains__("turn_clockwise_90_full_speed") and plan_actions[n].action_name.__contains__("b1"):
-                b1_plan_actions_num.append(2)
-            if plan_actions[n].action_name.__contains__("turn_clockwise_90_full_speed") and plan_actions[n].action_name.__contains__("b2"):
-                b2_plan_actions_num.append(2)
-            if plan_actions[n].action_name.__contains__("turn_clockwise_90_full_speed") and plan_actions[n].action_name.__contains__("b3"):
-                b3_plan_actions_num.append(2)
-            if plan_actions[n].action_name.__contains__("turn_counter_clockwise_90_full_speed") and plan_actions[n].action_name.__contains__("b1"):
-                b1_plan_actions_num.append(6)
-            if plan_actions[n].action_name.__contains__("turn_counter_clockwise_90_full_speed") and plan_actions[n].action_name.__contains__("b2"):
-                b2_plan_actions_num.append(6)
-            if plan_actions[n].action_name.__contains__("turn_counter_clockwise_90_full_speed") and plan_actions[n].action_name.__contains__("b3"):
-                b3_plan_actions_num.append(6)
+            if plan_actions[n].action_name.__contains__("move-north"):
+                if 60 <= self.b1_heading <= 120:  # heading west
+                    for _ in range (self.steps_2_turn):
+                        b1_plan_actions_num.append(2)
+                    for _ in range (self.steps_2_turn):
+                        b1_plan_actions_num.append(4)
+                if 150 <= self.b1_heading <= 210:  # heading south
+                    for _ in range (self.steps_2_turn*3//2):
+                        b1_plan_actions_num.append(2)
+                    for _ in range (self.steps_2_turn):
+                        b1_plan_actions_num.append(4)
+                if 240 <= self.b1_heading <= 300:  # heading east
+                    for _ in range(self.steps_2_turn):
+                        b1_plan_actions_num.append(6)
+                    for _ in range (self.steps_2_turn):
+                        b1_plan_actions_num.append(4)
+                if self.b1_heading <= 30 or self.b1_heading >= 300:  # heading north
+                    for _ in range(self.steps_2_move_1_cell):
+                        b1_plan_actions_num.append(4)
+                self.b1_heading = 0 # after moving north, bearing is now changed
+            if plan_actions[n].action_name.__contains__("move-south"):
+                if 60 <= self.b1_heading <= 120:  # heading west
+                    for _ in range(self.steps_2_turn):
+                        b1_plan_actions_num.append(6)
+                    for _ in range(self.steps_2_turn):
+                        b1_plan_actions_num.append(4)
+                if 150 <= self.b1_heading <= 210:  # heading south
+                    for _ in range(self.steps_2_move_1_cell):
+                        b1_plan_actions_num.append(4)
+                if 240 <= self.b1_heading <= 300:  # heading east
+                    for _ in range(self.steps_2_turn):
+                        b1_plan_actions_num.append(2)
+                    for _ in range(self.steps_2_turn):
+                        b1_plan_actions_num.append(4)
+                if self.b1_heading <= 30 or self.b1_heading >= 300:  # heading north
+                    for _ in range(self.steps_2_turn * 2):
+                        b1_plan_actions_num.append(2)
+                    for _ in range(self.steps_2_turn):
+                        b1_plan_actions_num.append(4)
+                self.b1_heading = 180 # after moving north, bearing is now changed
+            if plan_actions[n].action_name.__contains__("move-west"):
+                if 60 <= self.b1_heading <= 120:  # heading west
+                    for _ in range(self.steps_2_move_1_cell):
+                        b1_plan_actions_num.append(4)
+                if 150 <= self.b1_heading <= 210:  # heading south
+                    for _ in range (self.steps_2_turn):
+                        b1_plan_actions_num.append(2)
+                    for _ in range (self.steps_2_turn):
+                        b1_plan_actions_num.append(4)
+                if 240 <= self.b1_heading <= 300:  # heading east
+                    for _ in range(self.steps_2_turn*2):
+                        b1_plan_actions_num.append(2)
+                    for _ in range (self.steps_2_turn):
+                        b1_plan_actions_num.append(4)
+                if self.b1_heading <= 30 or self.b1_heading >= 300:  # heading north
+                    for _ in range (self.steps_2_turn):
+                        b1_plan_actions_num.append(6)
+                    for _ in range (self.steps_2_turn):
+                        b1_plan_actions_num.append(4)
+                self.b1_heading = 90 # after moving north, bearing is now changed
+            if plan_actions[n].action_name.__contains__("move-east"):
+                if 60 <= self.b1_heading <= 120:  # heading west
+                    for _ in range(self.steps_2_turn*3):
+                        b1_plan_actions_num.append(2)
+                    for _ in range(self.steps_2_turn):
+                        b1_plan_actions_num.append(6)
+                    for _ in range(self.steps_2_turn):
+                        b1_plan_actions_num.append(4)
+                if 150 <= self.b1_heading <= 210:  # heading south
+                    for _ in range(self.steps_2_turn):
+                        b1_plan_actions_num.append(6)
+                    for _ in range(self.steps_2_turn):
+                        b1_plan_actions_num.append(4)
+                if 240 <= self.b1_heading <= 300:  # heading east
+                    for _ in range(self.steps_2_move_1_cell):
+                        b1_plan_actions_num.append(4)
+                if self.b1_heading <= 30 or self.b1_heading >= 300:  # heading north
+                    for _ in range(self.steps_2_turn):
+                        b1_plan_actions_num.append(2)
+                    for _ in range(self.steps_2_turn):
+                        b1_plan_actions_num.append(4)
+                self.b1_heading = 270 # after moving north, bearing is now changed
 
-        self.curr_time += self.time_inc
-        self.curr_time = round(self.curr_time, 5) # wtf, 0.3 becomes 0.30000000000000004, so we do this
 
-        return b1_plan_actions_num, b2_plan_actions_num, b3_plan_actions_num
+        # self.curr_time += self.time_inc
+        # self.curr_time = round(self.curr_time, 5) # wtf, 0.3 becomes 0.30000000000000004, so we do this
+
+        return b1_plan_actions_num
 
 
 class PddlParserUtils:

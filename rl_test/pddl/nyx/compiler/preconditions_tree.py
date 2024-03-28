@@ -1,11 +1,11 @@
 from typing import Union, List, Callable, Optional, Iterator
 
-from compiler import JIT
-from syntax import constants
-from syntax.action import Action
-from syntax.event import Event
-from syntax.process import Process
-from syntax.state import State
+from . import JIT
+from ..syntax import constants
+from ..syntax.action import Action
+from ..syntax.event import Event
+from ..syntax.process import Process
+from ..syntax.state import State
 
 Happening = Union[Action, Process, Event]
 

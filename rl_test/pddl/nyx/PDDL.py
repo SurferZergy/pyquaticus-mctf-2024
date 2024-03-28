@@ -6,13 +6,13 @@ import re
 import sys
 import copy
 
-from compiler import JIT
-from compiler.preconditions_tree import PreconditionsTree
-from syntax.action import Action
-from syntax.event import Event
-from syntax.process import Process
-from syntax.state import State
-import syntax.constants as constants
+from .compiler import JIT
+from .compiler.preconditions_tree import PreconditionsTree
+from .syntax.action import Action
+from .syntax.event import Event
+from .syntax.process import Process
+from .syntax.state import State
+from .syntax import constants as constants
 
 
 class PDDLDomain:

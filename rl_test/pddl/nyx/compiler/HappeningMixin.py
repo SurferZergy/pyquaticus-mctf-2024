@@ -1,6 +1,6 @@
 from typing import Callable
 
-from compiler import JIT
+from . import JIT
 
 
 class HappeningMixin:
