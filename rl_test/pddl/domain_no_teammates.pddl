@@ -127,4 +127,28 @@
             (red_flag_at_red_base)
         )
     )
+
+    (:event blue_collide_b_1
+        :parameters (?b - blue)
+        :precondition (and
+            (= (brow ?b) 2)
+            (= (bcol ?b) 12)
+        )
+        :effect(and
+            (blue_collide ?b)
+            (red_flag_at_red_base)
+        )
+    )
+
+    (:event blue_collide_b_2
+        :parameters (?b - blue)
+        :precondition (and
+            (= (brow ?b) 6)
+            (= (bcol ?b) 12)
+        )
+        :effect(and
+            (blue_collide ?b)
+            (red_flag_at_red_base)
+        )
+    )
 )

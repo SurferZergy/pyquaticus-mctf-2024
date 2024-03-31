@@ -105,3 +105,40 @@ if __name__ == '__main__':
     print("Medium Detailed Results: ", temp_score)
     medium_score += temp_score['red_captures'] - temp_score['blue_captures'] - temp_score['blue_collisions']
     print("Final Medium Score: ", medium_score)
+
+    step = 0
+    # RED side Competition Medium Defender and Attacker vs Submission (Blue Side)
+    env = pyquaticus_v0.PyQuaticusEnv(team_size=3, config_dict=config_dict, render_mode=RENDER_MODE)
+    term_g = {0: False, 1: False}
+    truncated_g = {0: False, 1: False}
+    term = term_g
+    trunc = truncated_g
+    obs = env.reset()
+    temp_score = env.game_score
+    sol = solution()
+    H_one = BaseDefender(3, Team.RED_TEAM, mode='hard')
+    H_two = BaseAttacker(4, Team.RED_TEAM, mode='hard')
+    H_three = BaseAttacker(5, Team.RED_TEAM, mode='hard')
+    while True:
+        new_obs = {}
+        # Get normalized observation (for heuristic approaches)
+        for k in obs:
+            new_obs[k] = env.agent_obs_normalizer.unnormalized(obs[k])
+        zero = sol.compute_action(0, obs[0], new_obs[0])
+        one = sol.compute_action(1, obs[1], new_obs[1])
+        two = sol.compute_action(2, obs[2], new_obs[2])
+        three = H_one.compute_action(new_obs)
+        four = H_two.compute_action(new_obs)
+        five = H_three.compute_action(new_obs)
+
+        obs, reward, term, trunc, info = env.step({0: zero, 1: one, 2: two, 3: three, 4: four, 5: five})
+        k = list(term.keys())
+        step += 1
+        if term[k[0]] == True or trunc[k[0]] == True:
+            break
+    for k in env.game_score:
+        temp_score[k] += env.game_score[k]
+    env.close()
+    print("Hard Detailed Results: ", temp_score)
+    medium_score += temp_score['red_captures'] - temp_score['blue_captures'] - temp_score['blue_collisions']
+    print("Final HARD Score: ", medium_score)

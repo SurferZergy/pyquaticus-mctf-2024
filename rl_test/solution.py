@@ -20,7 +20,7 @@ class solution:
         self.b1_actions = []
         # self.b2_actions = []
         # self.b3_actions = []
-        self.n = 90 # number of actions b4 replan # need to set
+        self.n = 100 # number of actions b4 replan # need to set
         self.b1_full_speed = True # need to set
         # self.b2_full_speed = True  # need to set
         # self.b3_full_speed = True  # need to set
@@ -156,8 +156,8 @@ class solution:
 
         # objs
         pddl_problem.objects.append(['b1', 'blue'])
-        # pddl_problem.objects.append(['b2', 'blue'])
-        # pddl_problem.objects.append(['b3', 'blue'])
+        pddl_problem.objects.append(['b2', 'red'])
+        pddl_problem.objects.append(['b3', 'red'])
         pddl_problem.objects.append(['r1', 'red'])
         pddl_problem.objects.append(['r2', 'red'])
         pddl_problem.objects.append(['r3', 'red'])
@@ -169,8 +169,8 @@ class solution:
         #calc positions
         xb1 = obs[('wall_3_distance')]
         yb1 = obs[('wall_2_distance')]
-        # xb2, yb2 = self.calc_abs_pos(xb1, yb1, obs, 'teammate_0')
-        # xb3, yb3 = self.calc_abs_pos(xb1, yb1, obs, 'teammate_1')
+        xb2, yb2 = self.calc_abs_pos(xb1, yb1, obs, 'teammate_0')
+        xb3, yb3 = self.calc_abs_pos(xb1, yb1, obs, 'teammate_1')
         xr1, yr1 = self.calc_abs_pos(xb1, yb1, obs, 'opponent_0')
         xr2, yr2 = self.calc_abs_pos(xb1, yb1, obs, 'opponent_1')
         xr3, yr3 = self.calc_abs_pos(xb1, yb1, obs, 'opponent_2')
@@ -182,10 +182,12 @@ class solution:
         # pddl_problem.init.append(['=', ['brow', 'b1'], 8]) #to trigger no plan found
         # pddl_problem.init.append(['=', ['bcol', 'b1'], 8])
 
-        # pddl_problem.init.append(['=', ['x_b', 'b2'], xb2])
-        # pddl_problem.init.append(['=', ['y_b', 'b2'], yb2])
-        # pddl_problem.init.append(['=', ['x_b', 'b3'], xb3])
-        # pddl_problem.init.append(['=', ['y_b', 'b3'], yb3])
+        xc, yc = self.translate_coord_to_row_col(xb2, yb2)
+        pddl_problem.init.append(['=', ['rrow', 'b2'], yc])
+        pddl_problem.init.append(['=', ['rcol', 'b2'], xc])
+        xc, yc = self.translate_coord_to_row_col(xb3, yb3)
+        pddl_problem.init.append(['=', ['rrow', 'b3'], yc])
+        pddl_problem.init.append(['=', ['rcol', 'b3'], xc])
 
         xc, yc = self.translate_coord_to_row_col(xr1, yr1)
         pddl_problem.init.append(['=', ['rrow', 'r1'], yc])
@@ -249,8 +251,8 @@ class solution:
         # goal
         # # pddl_problem.goal.append(['pole_position'])
         # pddl_problem.goal.append(['not', ['total_failure']])
-        pddl_problem.goal.append(['=', ['brow', 'b1'], '4'])
-        pddl_problem.goal.append(['=', ['bcol', 'b1'], '12'])
+        # pddl_problem.goal.append(['=', ['brow', 'b1'], '4'])
+        pddl_problem.goal.append(['>=', ['bcol', 'b1'], '9'])
         pddl_problem.goal.append(['blue_has_flag', 'b1'])
         pddl_problem.goal.append(['not', ['blue_collide', 'b1']])
 
