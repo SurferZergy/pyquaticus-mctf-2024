@@ -4,6 +4,7 @@ from pddl.nyx import nyx
 import os
 import math
 import random
+import copy
 # from ray.rllib.policy.policy import Policy
 #Need an added import for codalab competition submission?
 #Post an issue to the github and we will work to get it added into the system!
@@ -14,19 +15,21 @@ import random
 #Load in your trained model and return the corresponding agent action based on the information provided in step()
 class solution:
 	#Add Variables required for solution
-	
+
     def __init__(self):
-        self.replan = True
+        self.replan_b1 = True
+        # self.replan_b0 = True
+        # self.replan_b2 = True
         self.b1_actions = []
+        # self.b0_actions = []
         # self.b2_actions = []
-        # self.b3_actions = []
         self.n = 100 # number of actions b4 replan # need to set
         self.b1_full_speed = True # need to set
+        # self.b0_full_speed = True  # need to set
         # self.b2_full_speed = True  # need to set
-        # self.b3_full_speed = True  # need to set
         self.b1_heading = 100  # set to wall 0 bearing
+        # self.b0_heading = 90  # set to wall 0 bearing
         # self.b2_heading = 90  # set to wall 0 bearing
-        # self.b3_heading = 90  # set to wall 0 bearing
         # self.curr_time = 0.0
         # self.time_inc = 0.1
         # self.noop = False
@@ -56,6 +59,7 @@ class solution:
     def compute_action(self,agent_id:int, observation_normalized:list, observation:dict):
 
         if agent_id == 1:
+
             self.b1_heading = (observation[('wall_0_bearing')] + 360) % 360
             xb1 = observation[('wall_3_distance')]
             yb1 = observation[('wall_2_distance')]
@@ -67,11 +71,11 @@ class solution:
                 else:
                     return 6
 
-            if self.replan:
-                self.b1_actions = self.calc_actions(observation)[:self.n]
-                self.replan = False
+            if self.replan_b1:
+                self.b1_actions = self.calc_actions(observation, agent_id)[:self.n]
+                self.replan_b1 = False
             elif len(self.b1_actions) == 1: # last action, need to replan next time
-                self.replan = True
+                self.replan_b1 = True
                 return self.b1_actions[0]
 
             self.c += 1
@@ -82,21 +86,23 @@ class solution:
 
         if agent_id == 0:
             return 2
+
         if agent_id == 2:
             return 6
 
-    def calc_actions(self, obs):
+    def calc_actions(self, obs, ag_id):
         backup_plan = []
         # Create PDDL Problem
         prob = self.create_pddl_problem(obs)
-        self.pddl_p_to_file(prob, 'prob.pddl')
+
+        self.pddl_p_to_file(prob, 'prob_{}.pddl'.format(ag_id))
 
         # Run PDDL
         dir = os.path.dirname(os.path.realpath(__file__))+'/pddl/'
         try:
             # nyx.runner("./pddl/domain.pddl", "./pddl/prob.pddl", ['-v', 't:5', '-to:15', '-noplan', '-search:gbfs', 'custom_h:1'])
             # nyx.runner("./pddl/domain.pddl", "./pddl/nyx/prob_2.pddl", ['-v', 't:5', '-to:30', '-search:gbfs', 'custom_h:1'])
-            plan_found = nyx.runner(dir+"domain.pddl", dir+"prob.pddl", ['-v', '-to:30', '-search:bfs'])
+            plan_found = nyx.runner(dir+"domain.pddl", dir+"prob_{}.pddl".format(ag_id), ['-v', '-to:30', '-search:bfs'])
             if not plan_found:
                 for _ in range (30):
                     backup_plan.append(4)
@@ -107,7 +113,7 @@ class solution:
             print('no plan found, using default plan.', 'Error:', e)
 
         # Get actions from PDDL results
-        plan_actions = self.extract_actions_from_plan_trace(dir+"plans/plan1_prob.pddl")
+        plan_actions = self.extract_actions_from_plan_trace(dir+"plans/plan1_prob_{}.pddl".format(ag_id))
         # plan_actions = self.extract_actions_from_plan_trace("./pddl/plans/test_plan.pddl")
 
         # Convert actions to discrete
@@ -153,7 +159,6 @@ class solution:
         pddl_problem.init = []
         pddl_problem.goal = []
 
-
         # objs
         pddl_problem.objects.append(['b1', 'blue'])
         pddl_problem.objects.append(['b2', 'red'])
@@ -161,9 +166,9 @@ class solution:
         pddl_problem.objects.append(['r1', 'red'])
         pddl_problem.objects.append(['r2', 'red'])
         pddl_problem.objects.append(['r3', 'red'])
-        for i in range (1,8):
-            for j in range (1,16):
-                pddl_problem.objects.append(['cell'+str(j)+'_'+str(i), 'cell'])
+        # for i in range (1,8):
+        #     for j in range (1,16):
+        #         pddl_problem.objects.append(['cell'+str(j)+'_'+str(i), 'cell'])
 
 
         #calc positions
@@ -210,10 +215,10 @@ class solution:
         else:
             pddl_problem.init.append(['red_flag_at_red_base'])
 
-        for i in range(1,8):
-            for j in range(1,16):
-                pddl_problem.init.append(['=', ['col', 'cell'+str(j)+'_'+str(i)], str(j)])
-                pddl_problem.init.append(['=', ['row', 'cell' + str(j) + '_' + str(i)], str(i)])
+        # for i in range(1,8):
+        #     for j in range(1,16):
+        #         pddl_problem.init.append(['=', ['col', 'cell'+str(j)+'_'+str(i)], str(j)])
+        #         pddl_problem.init.append(['=', ['row', 'cell' + str(j) + '_' + str(i)], str(i)])
 
         # pddl_problem.init.append(['=', ['x_base_blue'], '140'])
         # pddl_problem.init.append(['=', ['y_base_blue'], '40'])
@@ -247,15 +252,9 @@ class solution:
         # pddl_problem.init.append(['blue_flag_at_blue_base'])
         # pddl_problem.init.append(['red_flag_at_red_base'])
 
-
-        # goal
-        # # pddl_problem.goal.append(['pole_position'])
-        # pddl_problem.goal.append(['not', ['total_failure']])
-        # pddl_problem.goal.append(['=', ['brow', 'b1'], '4'])
         pddl_problem.goal.append(['>=', ['bcol', 'b1'], '9'])
         pddl_problem.goal.append(['blue_has_flag', 'b1'])
         pddl_problem.goal.append(['not', ['blue_collide', 'b1']])
-
 
         return pddl_problem
 

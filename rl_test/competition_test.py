@@ -30,6 +30,7 @@ if __name__ == '__main__':
     easy_score = 0
     medium_score = 0
     hidden_score = 0
+    hard_score = 0
 
     step = 0
     #RED side Competition Easy Defender and Attacker vs Submission (Blue Side)
@@ -103,7 +104,7 @@ if __name__ == '__main__':
         temp_score[k] += env.game_score[k]
     env.close()
     print("Medium Detailed Results: ", temp_score)
-    medium_score += temp_score['red_captures'] - temp_score['blue_captures'] - temp_score['blue_collisions']
+    medium_score += temp_score['blue_captures'] - temp_score['red_captures'] - temp_score['blue_collisions']
     print("Final Medium Score: ", medium_score)
 
     step = 0
@@ -140,5 +141,5 @@ if __name__ == '__main__':
         temp_score[k] += env.game_score[k]
     env.close()
     print("Hard Detailed Results: ", temp_score)
-    medium_score += temp_score['red_captures'] - temp_score['blue_captures'] - temp_score['blue_collisions']
-    print("Final HARD Score: ", medium_score)
+    hard_score += temp_score['blue_captures'] - temp_score['red_captures'] - temp_score['blue_collisions']
+    print("Final HARD Score: ", hard_score)

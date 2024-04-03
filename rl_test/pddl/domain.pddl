@@ -1,16 +1,18 @@
 (define (domain mctf)
 
     (:requirements :typing :fluents :negative-preconditions)
-    (:types cell blue red)
+    (:types blue red)
 
     (:predicates
         (blue_collide ?b - blue)
         (blue_has_flag ?b - blue)
         (red_flag_at_red_base)
+        (total_failure)
+        ; (red_tagged ?r - red)
     )
     (:functions
-        (row ?c - cell)
-        (col ?c - cell)
+        ; (row ?c - cell)
+        ; (col ?c - cell)
         (brow ?b - blue)
         (bcol ?b - blue)
         (rbrow)
@@ -25,65 +27,69 @@
 
     (:action blue_move-north
         ; :parameters (?b - blue ?to - cell ?r - red)
-        :parameters (?b - blue ?to - cell)
+        :parameters (?b - blue)
         :precondition (and
-            (= (bcol ?b) (col ?to))
-            (= (- (brow ?b) (row ?to)) -1)
-            (not (= (brow ?b) 2))
-            (not (= (bcol ?b) 12))
-            (not (= (brow ?b) 6))
-            (not (= (bcol ?b) 12))
+            ; (= (bcol ?b) (col ?to))
+            ; (= (- (brow ?b) (row ?to)) -1)
+            ; (not (= (brow ?b) 2))
+            ; (not (= (bcol ?b) 12))
+            (not (= (brow ?b) 7))
+            ; (not (= (bcol ?b) 12))
             ; (<= (+ (^ (^ (- (brow ?b) (rrow ?r)) 2) 0.5) (^ (^ (- (bcol ?b) (rcol ?r)) 2) 0.5)) 1)
         )
         :effect (and
-            (assign (brow ?b) (row ?to))
+            ; (assign (brow ?b) (row ?to))
+            (increase (brow ?b) 1)
         )
     )
 
     (:action blue_move-south
         ; :parameters (?b - blue ?to - cell ?r - red)
-        :parameters (?b - blue ?to - cell)
+        :parameters (?b - blue)
         :precondition (and
-            (= (bcol ?b) (col ?to))
-            (= (- (brow ?b) (row ?to)) 1)
-            (not (= (brow ?b) 2))
-            (not (= (bcol ?b) 12))
-            (not (= (brow ?b) 6))
-            (not (= (bcol ?b) 12))
+            ; (= (bcol ?b) (col ?to))
+            ; (= (- (brow ?b) (row ?to)) 1)
+            ; (not (= (brow ?b) 2))
+            ; (not (= (bcol ?b) 12))
+            (not (= (brow ?b) 1))
+            ; (not (= (bcol ?b) 12))
             ; (<= (+ (^ (^ (- (brow ?b) (rrow ?r)) 2) 0.5) (^ (^ (- (bcol ?b) (rcol ?r)) 2) 0.5)) 1)
         )
         :effect (and
-            (assign (brow ?b) (row ?to))
+            (decrease (brow ?b) 1)
         )
     )
 
     (:action blue_move-east
         ; :parameters (?b - blue ?to - cell ?r - red)
-        :parameters (?b - blue ?to - cell)
+        :parameters (?b - blue)
         :precondition (and
-            (= (brow ?b) (row ?to))
-            (= (- (bcol ?b) (col ?to)) -1)
-            (not (= (brow ?b) 2))
-            (not (= (bcol ?b) 12))
-            (not (= (brow ?b) 6))
-            (not (= (bcol ?b) 12))
+            ; (= (brow ?b) (row ?to))
+            ; (= (- (bcol ?b) (col ?to)) -1)
+            ; (not (= (brow ?b) 2))
+            (not (= (bcol ?b) 15))
+            ; (not (= (brow ?b) 6))
+            ; (not (= (bcol ?b) 12))
             ; (<= (+ (^ (^ (- (row ?to) (rrow ?r)) 2) 0.5) (^ (^ (- (col ?to) (rcol ?r)) 2) 0.5)) 1)
         )
         :effect (and
-            (assign (bcol ?b) (col ?to))
+            ; (assign (bcol ?b) (col ?to))
+            (increase (bcol ?b) 1)
         )
     )
 
     (:action blue_move-west
         ; :parameters (?b - blue ?to - cell ?r - red)
-        :parameters (?b - blue ?to - cell)
+        :parameters (?b - blue)
         :precondition (and
-            (= (brow ?b) (row ?to))
-            (= (- (bcol ?b) (col ?to)) 1)
+            (not (= (bcol ?b) 1))
+            ; (= (brow ?b) (row ?to))
+            ; (= (- (bcol ?b) (col ?to)) 1)
             ; (<= (+ (^ (^ (- (brow ?b) (rrow ?r)) 2) 0.5) (^ (^ (- (bcol ?b) (rcol ?r)) 2) 0.5)) 1)
         )
         :effect (and
-            (assign (bcol ?b) (col ?to))
+            ; (assign (bcol ?b) (col ?to))
+            (decrease (bcol ?b) 1)
         )
     )
 
@@ -121,10 +127,13 @@
         :precondition (and
             (= (rrow ?r) (brow ?b))
             (= (rcol ?r) (bcol ?b))
+            (<= (^ (+ (^ (- (brow ?b) (rrow ?r)) 2) (^ (- (bcol ?b) (rcol ?r)) 2)) 0.5) 2)
         )
         :effect(and
             (blue_collide ?b)
             (red_flag_at_red_base)
+            ; (red_tagged ?r)
         )
     )
+
 )
