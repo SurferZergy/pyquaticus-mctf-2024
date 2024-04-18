@@ -5,7 +5,7 @@
   (:types blue red)
 
   (:predicates
-    (ready) (total_failure)
+    (ready) (total_failure) (game_end)
     (adjustable_bearing) ;; ensure agents only choose a single bearing per time step (to reduce state space)
     (tagged_blue ?b - blue) (tagged_red ?r - red) (has_blue_flag ?r - red) (has_red_flag ?b - blue)
     (blue_flag_at_blue_base) (red_flag_at_red_base)
@@ -38,7 +38,7 @@
 
   (:process update_position
     :parameters (?b - blue)
-    :precondition (and (ready) (not (total_failure)))
+    :precondition (and (ready) (not (total_failure)) )
     :effect (and
         (decrease (x_b ?b) (* #t (* (@sin (@radians (bearing ?b))) (v_b ?b))) )
         (increase (y_b ?b) (* #t (* (@cos (@radians (bearing ?b))) (v_b ?b))) )
@@ -200,7 +200,7 @@
   )
 
   (:event red_scores
-    :parameters (?r - red)g
+    :parameters (?r - red)
     :precondition (and (has_blue_flag ?r) (< (x_r ?r) (/ (x_max) 2)))
     :effect (and (increase (score_red) 1.0))
   )

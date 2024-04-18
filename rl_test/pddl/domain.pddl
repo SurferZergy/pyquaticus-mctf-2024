@@ -31,10 +31,9 @@
         :precondition (and
             ; (= (bcol ?b) (col ?to))
             ; (= (- (brow ?b) (row ?to)) -1)
-            ; (not (= (brow ?b) 2))
-            ; (not (= (bcol ?b) 12))
-            (not (= (brow ?b) 7))
-            ; (not (= (bcol ?b) 12))
+            ; (not (and (= (brow ?b) 3) (= (bcol ?b) 3)))
+            ; (not (and (= (brow ?b) 3) (= (bcol ?b) 4)))
+            (< (brow ?b) 7)
             ; (<= (+ (^ (^ (- (brow ?b) (rrow ?r)) 2) 0.5) (^ (^ (- (bcol ?b) (rcol ?r)) 2) 0.5)) 1)
         )
         :effect (and
@@ -51,7 +50,9 @@
             ; (= (- (brow ?b) (row ?to)) 1)
             ; (not (= (brow ?b) 2))
             ; (not (= (bcol ?b) 12))
-            (not (= (brow ?b) 1))
+            ; (not (and (= (brow ?b) 5) (= (bcol ?b) 3)))
+            ; (not (and (= (brow ?b) 5) (= (bcol ?b) 4)))
+            (> (brow ?b) 1)
             ; (not (= (bcol ?b) 12))
             ; (<= (+ (^ (^ (- (brow ?b) (rrow ?r)) 2) 0.5) (^ (^ (- (bcol ?b) (rcol ?r)) 2) 0.5)) 1)
         )
@@ -67,7 +68,9 @@
             ; (= (brow ?b) (row ?to))
             ; (= (- (bcol ?b) (col ?to)) -1)
             ; (not (= (brow ?b) 2))
-            (not (= (bcol ?b) 15))
+            ; (not (and (= (brow ?b) 4) (= (bcol ?b) 2)))
+            (< (bcol ?b) 14)
+
             ; (not (= (brow ?b) 6))
             ; (not (= (bcol ?b) 12))
             ; (<= (+ (^ (^ (- (row ?to) (rrow ?r)) 2) 0.5) (^ (^ (- (col ?to) (rcol ?r)) 2) 0.5)) 1)
@@ -82,7 +85,9 @@
         ; :parameters (?b - blue ?to - cell ?r - red)
         :parameters (?b - blue)
         :precondition (and
-            (not (= (bcol ?b) 1))
+            (> (bcol ?b) 1)
+            ; (not (and (= (brow ?b) 4) (= (bcol ?b) 4)))
+            ; (not (and (= (brow ?b) 4) (= (bcol ?b) 5)))
             ; (= (brow ?b) (row ?to))
             ; (= (- (bcol ?b) (col ?to)) 1)
             ; (<= (+ (^ (^ (- (brow ?b) (rrow ?r)) 2) 0.5) (^ (^ (- (bcol ?b) (rcol ?r)) 2) 0.5)) 1)
@@ -127,7 +132,9 @@
         :precondition (and
             (= (rrow ?r) (brow ?b))
             (= (rcol ?r) (bcol ?b))
-            (<= (^ (+ (^ (- (brow ?b) (rrow ?r)) 2) (^ (- (bcol ?b) (rcol ?r)) 2)) 0.5) 2)
+            (<= (^ (^ (- (rrow ?r) (brow ?b)) 2) 0.5) 1)
+            (<= (^ (^ (- (rcol ?r) (bcol ?b)) 2) 0.5) 1)
+            ; (< (^ (+ (^ (- (brow ?b) (rrow ?r)) 2) (^ (- (bcol ?b) (rcol ?r)) 2)) 0.5) 1)
         )
         :effect(and
             (blue_collide ?b)

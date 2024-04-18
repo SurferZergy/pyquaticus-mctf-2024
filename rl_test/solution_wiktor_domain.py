@@ -20,7 +20,7 @@ class solution:
         self.b1_actions = []
         self.b2_actions = []
         self.b3_actions = []
-        self.n = 500 # number of actions b4 replan # need to set
+        self.n = 100 # number of actions b4 replan # need to set
         self.b1_full_speed = True # need to set
         self.b2_full_speed = True  # need to set
         self.b3_full_speed = True  # need to set
@@ -62,22 +62,22 @@ class solution:
             self.b1_heading = (observation[('wall_0_bearing')] +360) %360
         xb1 = observation[('wall_3_distance')]
         yb1 = observation[('wall_2_distance')]
-        print(xb1,yb1,self.b1_heading)
+        # print(xb1,yb1,self.b1_heading)
 
-        if 60 <= self.b1_heading <=120: #heading west
-            print('w')
-        if 150 <= self.b1_heading <= 210:  # heading south
-            print('s')
-        if 240 <= self.b1_heading <= 300:  # heading east
-            print('e')
-        if self.b1_heading <=30 or self.b1_heading >=300:  # heading north
-            print('n')
+        # if 60 <= self.b1_heading <=120: #heading west
+        #     print('w')
+        # if 150 <= self.b1_heading <= 210:  # heading south
+        #     print('s')
+        # if 240 <= self.b1_heading <= 300:  # heading east
+        #     print('e')
+        # if self.b1_heading <=30 or self.b1_heading >=300:  # heading north
+        #     print('n')
 
         a = self.tmp[0]
         self.tmp = self.tmp[1:]
         self.tmp.append(4)
         # print('a', a)
-        return 2
+        # return 2
 
         # if agent_id == 0:
         #     b1wzb = observation[('wall_0_bearing')]
@@ -198,13 +198,13 @@ class solution:
         try:
             # nyx.runner("./pddl/domain.pddl", "./pddl/prob.pddl", ['-v', 't:5', '-to:15', '-noplan', '-search:gbfs', 'custom_h:1'])
             # nyx.runner("./pddl/domain.pddl", "./pddl/nyx/prob_2.pddl", ['-v', 't:5', '-to:30', '-search:gbfs', 'custom_h:1'])
-            nyx.runner("./pddl/domain.pddl", "./pddl/prob.pddl",['-v', 't:5', '-to:30', '-search:gbfs', 'custom_h:1'])
+            nyx.runner("./pddl/domain_wiktor.pddl", "./pddl/prob.pddl",['-v', 't:0.1', '-to:30', '-search:dfs', '-dl:5000'])
         except Exception as e:
             print('no plan found, using default plan.', 'Error:', e)
 
         # Get actions from PDDL results
         # plan_actions = self.extract_actions_from_plan_trace("pddl/plans/plan1_prob.pddl")
-        plan_actions = self.extract_actions_from_plan_trace("./pddl/nyx/plans/plan1_prob_2.pddl")
+        plan_actions = self.extract_actions_from_plan_trace("./pddl/nyx/plans/plan1_prob.pddl")
 
         # Convert actions to discrete
         b1_plan_actions_num, b2_plan_actions_num, b3_plan_actions_num = self.convert_actions(plan_actions,50)
@@ -348,15 +348,24 @@ class solution:
 
         return pddl_problem
 
+    # def calc_abs_pos(self, xb1 , yb1, obs, agent):
+    #     other_agent_dis = obs[(agent, 'distance')]
+    #     wall_bearing = obs[('wall_1_bearing')] # needs to be the pos X axis
+    #     other_agent_bearing_to_you = obs[(agent, 'bearing')]
+    #     wall_bearing = self.convert_angle_to_pos_aka_clockwise(wall_bearing)
+    #     other_agent_bearing_to_you = self.convert_angle_to_pos_aka_clockwise(other_agent_bearing_to_you)
+    #     other_agent_bearing_to_xaxis = abs(other_agent_bearing_to_you - wall_bearing)
+    #     return self.calculate_new_point(xb1, yb1, other_agent_dis, other_agent_bearing_to_xaxis)
+
     def calc_abs_pos(self, xb1 , yb1, obs, agent):
         other_agent_dis = obs[(agent, 'distance')]
         wall_bearing = obs[('wall_1_bearing')] # needs to be the pos X axis
         other_agent_bearing_to_you = obs[(agent, 'bearing')]
-        wall_bearing = self.convert_angle_to_pos_aka_clockwise(wall_bearing)
-        other_agent_bearing_to_you = self.convert_angle_to_pos_aka_clockwise(other_agent_bearing_to_you)
-        other_agent_bearing_to_xaxis = abs(other_agent_bearing_to_you - wall_bearing)
+        other_agent_bearing_to_xaxis = wall_bearing - other_agent_bearing_to_you
+        # wall_bearing = self.convert_angle_to_pos_aka_clockwise(wall_bearing)
+        # other_agent_bearing_to_you = self.convert_angle_to_pos_aka_clockwise(other_agent_bearing_to_you)
+        # other_agent_bearing_to_xaxis = other_agent_bearing_to_you - wall_bearing
         return self.calculate_new_point(xb1, yb1, other_agent_dis, other_agent_bearing_to_xaxis)
-
 
     def pddl_p_to_file(self, pddl_problem: PddlPlusProblem, output_file_name):
         parse_utils = PddlParserUtils()

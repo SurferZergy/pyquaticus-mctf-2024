@@ -56,7 +56,7 @@ class solution:
         return x2, y2
 
 	#Given an observation return a valid action agent_id is agent that needs an action, observation space is the current normalized observation space for the specific agent
-    def compute_action(self,agent_id:int, observation_normalized:list, observation:dict):
+    def compute_action(self,agent_id:int, observation_normalized:list, observation:dict, full_observation:dict):
 
         if agent_id == 1:
 
