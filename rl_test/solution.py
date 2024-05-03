@@ -5,6 +5,7 @@ import os
 import math
 import random
 import copy
+from itertools import groupby
 # from ray.rllib.policy.policy import Policy
 #Need an added import for codalab competition submission?
 #Post an issue to the github and we will work to get it added into the system!
@@ -24,6 +25,8 @@ class solution:
         # self.b0_actions = []
         # self.b2_actions = []
         self.n = 100 # number of actions b4 replan # need to set
+        self.default_n = 100
+        self.heuristic = 5
         self.b1_full_speed = True # need to set
         # self.b0_full_speed = True  # need to set
         # self.b2_full_speed = True  # need to set
@@ -58,11 +61,14 @@ class solution:
 	#Given an observation return a valid action agent_id is agent that needs an action, observation space is the current normalized observation space for the specific agent
     def compute_action(self,agent_id:int, observation_normalized:list, observation:dict, full_observation:dict):
 
-        if agent_id == 1:
+        if agent_id == 1 or agent_id == 4:
 
             self.b1_heading = (observation[('wall_0_bearing')] + 360) % 360
-            xb1 = observation[('wall_3_distance')]
-            yb1 = observation[('wall_2_distance')]
+
+            if agent_id == 4:
+                self.b1_heading = (observation[('wall_2_bearing')] + 360) % 360
+            # xb1 = observation[('wall_3_distance')]
+            # yb1 = observation[('wall_2_distance')]
 
             #adjust bearing
             if (len(self.b1_actions) == 1 or all(e == 4 for e in self.b1_actions[:5])) and ((4 <= self.b1_heading <= 86) or (94 <= self.b1_heading <= 176) or (184 <= self.b1_heading <= 266) or (276 <= self.b1_heading <= 356)):
@@ -72,11 +78,18 @@ class solution:
                     return 6
 
             if self.replan_b1:
-                self.b1_actions = self.calc_actions(observation, agent_id)[:self.n]
+                # self.b1_actions = self.calc_actions(observation, agent_id)[:self.n]
+                temp_b1_actions = self.calc_actions(full_observation, agent_id)
+                duplicate_actions = [sum(1 for _ in group) for _, group in groupby(temp_b1_actions)]
+                self.n = min(self.default_n, duplicate_actions[0])
+                self.b1_actions = temp_b1_actions[:self.n]
                 self.replan_b1 = False
             elif len(self.b1_actions) == 1: # last action, need to replan next time
                 self.replan_b1 = True
                 return self.b1_actions[0]
+            # else:
+            #     self.replan_b1 = True
+            #     return 2
 
             self.c += 1
             b1_current_action = self.b1_actions[0]
@@ -84,16 +97,22 @@ class solution:
             # print(b1_current_action, 'step', self.c)
             return b1_current_action
 
-        if agent_id == 0:
+        if agent_id == 0 or agent_id == 5:
             return 2
 
-        if agent_id == 2:
+        if agent_id == 2 or agent_id == 3:
             return 6
 
     def calc_actions(self, obs, ag_id):
         backup_plan = []
         # Create PDDL Problem
-        prob = self.create_pddl_problem(obs)
+
+        prob = None
+
+        if ag_id == 4:
+            prob = self.create_pddl_problem_red(obs)
+        elif ag_id == 1:
+            prob = self.create_pddl_problem_blue(obs)
 
         self.pddl_p_to_file(prob, 'prob_{}.pddl'.format(ag_id))
 
@@ -102,7 +121,13 @@ class solution:
         try:
             # nyx.runner("./pddl/domain.pddl", "./pddl/prob.pddl", ['-v', 't:5', '-to:15', '-noplan', '-search:gbfs', 'custom_h:1'])
             # nyx.runner("./pddl/domain.pddl", "./pddl/nyx/prob_2.pddl", ['-v', 't:5', '-to:30', '-search:gbfs', 'custom_h:1'])
-            plan_found = nyx.runner(dir+"domain.pddl", dir+"prob_{}.pddl".format(ag_id), ['-v', '-to:30', '-search:bfs'])
+
+            if ag_id == 4:
+                self.heuristic = 6
+            elif ag_id == 1:
+                self.heuristic = 5
+
+            plan_found = nyx.runner(dir+"domain.pddl", dir+"prob_{}.pddl".format(ag_id), ['-v', '-to:30', '-search:gbfs', '-custom_h:{}'.format(self.heuristic)])
             if not plan_found:
                 for _ in range (30):
                     backup_plan.append(4)
@@ -150,7 +175,7 @@ class solution:
         return plan_actions
 
 
-    def create_pddl_problem(self, obs):
+    def create_pddl_problem_blue(self, obs):
         pddl_problem = PddlPlusProblem()
         pddl_problem.domain = 'mctf'
         pddl_problem.name = 'mctf-problem'
@@ -161,24 +186,25 @@ class solution:
 
         # objs
         pddl_problem.objects.append(['b1', 'blue'])
+        pddl_problem.objects.append(['b0', 'red'])
         pddl_problem.objects.append(['b2', 'red'])
-        pddl_problem.objects.append(['b3', 'red'])
+        pddl_problem.objects.append(['r0', 'red'])
         pddl_problem.objects.append(['r1', 'red'])
         pddl_problem.objects.append(['r2', 'red'])
-        pddl_problem.objects.append(['r3', 'red'])
-        # for i in range (1,8):
-        #     for j in range (1,16):
-        #         pddl_problem.objects.append(['cell'+str(j)+'_'+str(i), 'cell'])
-
 
         #calc positions
-        xb1 = obs[('wall_3_distance')]
-        yb1 = obs[('wall_2_distance')]
-        xb2, yb2 = self.calc_abs_pos(xb1, yb1, obs, 'teammate_0')
-        xb3, yb3 = self.calc_abs_pos(xb1, yb1, obs, 'teammate_1')
-        xr1, yr1 = self.calc_abs_pos(xb1, yb1, obs, 'opponent_0')
-        xr2, yr2 = self.calc_abs_pos(xb1, yb1, obs, 'opponent_1')
-        xr3, yr3 = self.calc_abs_pos(xb1, yb1, obs, 'opponent_2')
+        xb1 = obs[1][('wall_3_distance')]
+        yb1 = obs[1][('wall_2_distance')]
+        xb0 = obs[0][('wall_3_distance')]
+        yb0 = obs[0][('wall_2_distance')]
+        xb2 = obs[2][('wall_3_distance')]
+        yb2 = obs[2][('wall_2_distance')]
+        xr0 = obs[3][('wall_1_distance')]
+        yr0 = obs[3][('wall_0_distance')]
+        xr1 = obs[4][('wall_1_distance')]
+        yr1 = obs[4][('wall_0_distance')]
+        xr2 = obs[5][('wall_1_distance')]
+        yr2 = obs[5][('wall_0_distance')]
 
         # init
         xc, yc = self.translate_coord_to_row_col(xb1, yb1)
@@ -187,12 +213,12 @@ class solution:
         # pddl_problem.init.append(['=', ['brow', 'b1'], 8]) #to trigger no plan found
         # pddl_problem.init.append(['=', ['bcol', 'b1'], 8])
 
+        xc, yc = self.translate_coord_to_row_col(xb0, yb0)
+        pddl_problem.init.append(['=', ['rrow', 'b0'], yc])
+        pddl_problem.init.append(['=', ['rcol', 'b0'], xc])
         xc, yc = self.translate_coord_to_row_col(xb2, yb2)
         pddl_problem.init.append(['=', ['rrow', 'b2'], yc])
         pddl_problem.init.append(['=', ['rcol', 'b2'], xc])
-        xc, yc = self.translate_coord_to_row_col(xb3, yb3)
-        pddl_problem.init.append(['=', ['rrow', 'b3'], yc])
-        pddl_problem.init.append(['=', ['rcol', 'b3'], xc])
 
         xc, yc = self.translate_coord_to_row_col(xr1, yr1)
         pddl_problem.init.append(['=', ['rrow', 'r1'], yc])
@@ -200,61 +226,125 @@ class solution:
         xc, yc = self.translate_coord_to_row_col(xr2, yr2)
         pddl_problem.init.append(['=', ['rrow', 'r2'], yc])
         pddl_problem.init.append(['=', ['rcol', 'r2'], xc])
-        xc, yc = self.translate_coord_to_row_col(xr3, yr3)
-        pddl_problem.init.append(['=', ['rrow', 'r3'], yc])
-        pddl_problem.init.append(['=', ['rcol', 'r3'], xc])
+        xc, yc = self.translate_coord_to_row_col(xr0, yr0)
+        pddl_problem.init.append(['=', ['rrow', 'r0'], yc])
+        pddl_problem.init.append(['=', ['rcol', 'r0'], xc])
 
         pddl_problem.init.append(['=', ['rbrow'], '4'])
         pddl_problem.init.append(['=', ['rbcol'], '2'])
         pddl_problem.init.append(['=', ['bbrow'], '4'])
         pddl_problem.init.append(['=', ['bbcol'], '14'])
 
-        has_flag = obs[('has_flag')]
+        has_flag = obs[1][('has_flag')]
         if has_flag:
             pddl_problem.init.append(['blue_has_flag', 'b1'])
         else:
             pddl_problem.init.append(['red_flag_at_red_base'])
 
-        # for i in range(1,8):
-        #     for j in range(1,16):
-        #         pddl_problem.init.append(['=', ['col', 'cell'+str(j)+'_'+str(i)], str(j)])
-        #         pddl_problem.init.append(['=', ['row', 'cell' + str(j) + '_' + str(i)], str(i)])
-
-        # pddl_problem.init.append(['=', ['x_base_blue'], '140'])
-        # pddl_problem.init.append(['=', ['y_base_blue'], '40'])
-        # pddl_problem.init.append(['=', ['x_base_red'], '20'])
-        # pddl_problem.init.append(['=', ['y_base_red'], '40'])
-        # pddl_problem.init.append(['=', ['r_agent'], '2'])
-        # pddl_problem.init.append(['=', ['r_catch'], '10'])
-        # pddl_problem.init.append(['=', ['r_collision'], '2.2'])
-        # pddl_problem.init.append(['=', ['r_capture'], '10'])
-        #
-        # pddl_problem.init.append(['=', ['x_max'], '160'])
-        # pddl_problem.init.append(['=', ['x_min'], '0'])
-        # pddl_problem.init.append(['=', ['y_max'], '80'])
-        # pddl_problem.init.append(['=', ['y_min'], '0'])
-        # pddl_problem.init.append(['=', ['max_cooldown_time'], '30'])
-        #
-        # pddl_problem.init.append(['=', ['cooldown_time_blue', 'b1'], obs['tagging_cooldown']])
-        # pddl_problem.init.append(['=', ['cooldown_time_blue', 'b2'], obs[('teammate_0', 'tagging_cooldown')]])
-        # pddl_problem.init.append(['=', ['cooldown_time_blue', 'b3'], obs[('teammate_1', 'tagging_cooldown')]])
-        # pddl_problem.init.append(['=', ['cooldown_time_red', 'r1'], obs[('opponent_0', 'tagging_cooldown')]])
-        # pddl_problem.init.append(['=', ['cooldown_time_red', 'r2'], obs[('opponent_1', 'tagging_cooldown')]])
-        # pddl_problem.init.append(['=', ['cooldown_time_red', 'r3'], obs[('opponent_2', 'tagging_cooldown')]])
-        #
-        # pddl_problem.init.append(['=', ['v_max'], '1.5'])
-        #
-        # pddl_problem.init.append(['=', ['score_blue'], obs['team_score']])
-        # pddl_problem.init.append(['=', ['score_red'], obs['opponent_score']])
-        #
-        # pddl_problem.init.append(['ready'])
-        # pddl_problem.init.append(['adjustable_handling'])
-        # pddl_problem.init.append(['blue_flag_at_blue_base'])
-        # pddl_problem.init.append(['red_flag_at_red_base'])
+        if (obs[0][("is_tagged")]):
+            pddl_problem.init.append(['red_tagged', 'b0'])
+        if (obs[2][("is_tagged")]):
+            pddl_problem.init.append(['red_tagged', 'b2'])
+        if (obs[3][("is_tagged")]):
+            pddl_problem.init.append(['red_tagged', 'r0'])
+        if (obs[4][("is_tagged")]):
+            pddl_problem.init.append(['red_tagged', 'r1'])
+        if (obs[5][("is_tagged")]):
+            pddl_problem.init.append(['red_tagged', 'r2'])
 
         pddl_problem.goal.append(['>=', ['bcol', 'b1'], '9'])
         pddl_problem.goal.append(['blue_has_flag', 'b1'])
         pddl_problem.goal.append(['not', ['blue_collide', 'b1']])
+
+        return pddl_problem
+
+    def create_pddl_problem_red(self, obs):
+        pddl_problem = PddlPlusProblem()
+        pddl_problem.domain = 'mctf'
+        pddl_problem.name = 'mctf-problem'
+        pddl_problem.metric = 'minimize(total-time)'
+        pddl_problem.objects = []
+        pddl_problem.init = []
+        pddl_problem.goal = []
+
+        # objs
+        pddl_problem.objects.append(['r4', 'blue'])
+        pddl_problem.objects.append(['r3', 'red'])
+        pddl_problem.objects.append(['r5', 'red'])
+        pddl_problem.objects.append(['b0', 'red'])
+        pddl_problem.objects.append(['b1', 'red'])
+        pddl_problem.objects.append(['b2', 'red'])
+
+
+        #calc positions
+        xr4 = obs[4][('wall_1_distance')]
+        yr4 = obs[4][('wall_0_distance')]
+        xr3 = obs[3][('wall_1_distance')]
+        yr3 = obs[3][('wall_0_distance')]
+        xr5 = obs[5][('wall_1_distance')]
+        yr5 = obs[5][('wall_0_distance')]
+        xb0 = obs[0][('wall_3_distance')]
+        yb0 = obs[0][('wall_2_distance')]
+        xb1 = obs[1][('wall_3_distance')]
+        yb1 = obs[1][('wall_2_distance')]
+        xb2 = obs[2][('wall_3_distance')]
+        yb2 = obs[2][('wall_2_distance')]
+        # xr2, yb2 = self.calc_abs_pos(xb1, yb1, obs[1], 'teammate_0')
+        # xb3, yb3 = self.calc_abs_pos(xb1, yb1, obs[1], 'teammate_1')
+        # xr1, yr1 = self.calc_abs_pos(xb1, yb1, obs[1], 'opponent_0')
+        # xr2, yr2 = self.calc_abs_pos(xb1, yb1, obs[1], 'opponent_1')
+        # xr3, yr3 = self.calc_abs_pos(xb1, yb1, obs[1], 'opponent_2')
+
+        # init
+        xc, yc = self.translate_coord_to_row_col(xr4, yr4)
+        pddl_problem.init.append(['=', ['brow', 'r4'], yc])
+        pddl_problem.init.append(['=', ['bcol', 'r4'], xc])
+        # pddl_problem.init.append(['=', ['brow', 'b1'], 8]) #to trigger no plan found
+        # pddl_problem.init.append(['=', ['bcol', 'b1'], 8])
+
+        xc, yc = self.translate_coord_to_row_col(xr3, yr3)
+        pddl_problem.init.append(['=', ['rrow', 'r3'], yc])
+        pddl_problem.init.append(['=', ['rcol', 'r3'], xc])
+        xc, yc = self.translate_coord_to_row_col(xr5, yr5)
+        pddl_problem.init.append(['=', ['rrow', 'r5'], yc])
+        pddl_problem.init.append(['=', ['rcol', 'r5'], xc])
+
+        xc, yc = self.translate_coord_to_row_col(xb0, yb0)
+        pddl_problem.init.append(['=', ['rrow', 'b0'], yc])
+        pddl_problem.init.append(['=', ['rcol', 'b0'], xc])
+        xc, yc = self.translate_coord_to_row_col(xb1, yb1)
+        pddl_problem.init.append(['=', ['rrow', 'b1'], yc])
+        pddl_problem.init.append(['=', ['rcol', 'b1'], xc])
+        xc, yc = self.translate_coord_to_row_col(xb2, yb2)
+        pddl_problem.init.append(['=', ['rrow', 'b2'], yc])
+        pddl_problem.init.append(['=', ['rcol', 'b2'], xc])
+
+        pddl_problem.init.append(['=', ['bbrow'], '4'])
+        pddl_problem.init.append(['=', ['bbcol'], '2'])
+        pddl_problem.init.append(['=', ['rbrow'], '4'])
+        pddl_problem.init.append(['=', ['rbcol'], '14'])
+
+        has_flag = obs[4][('has_flag')]
+        if has_flag:
+            pddl_problem.init.append(['blue_has_flag', 'r4'])
+        else:
+            pddl_problem.init.append(['red_flag_at_red_base'])
+
+        if (obs[0][("is_tagged")]):
+            pddl_problem.init.append(['red_tagged', 'b0'])
+        if (obs[1][("is_tagged")]):
+            pddl_problem.init.append(['red_tagged', 'b1'])
+        if (obs[2][("is_tagged")]):
+            pddl_problem.init.append(['red_tagged', 'b2'])
+        if (obs[3][("is_tagged")]):
+            pddl_problem.init.append(['red_tagged', 'r3'])
+        if (obs[5][("is_tagged")]):
+            pddl_problem.init.append(['red_tagged', 'r5'])
+
+
+        pddl_problem.goal.append(['<=', ['bcol', 'r4'], '7'])
+        pddl_problem.goal.append(['blue_has_flag', 'r4'])
+        pddl_problem.goal.append(['not', ['blue_collide', 'r4']])
 
         return pddl_problem
 

@@ -9,7 +9,135 @@ def dis_pts(x1, y1, x2, y2):
 
 def heuristic_function(state):
 
-    if constants.CUSTOM_HEURISTIC_ID == 1:
+    if constants.CUSTOM_HEURISTIC_ID == 0:
+
+        if state.state_vars["['blue_has_flag', 'b1']"]:
+            distance_to_blue_base = math.dist([state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                             [state.state_vars["['bbcol']"], state.state_vars["['bbrow']"]])
+            return distance_to_blue_base
+
+        else:
+            distance_to_red_base = math.dist([state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                             [state.state_vars["['rbcol']"], state.state_vars["['rbrow']"]])
+            return distance_to_red_base
+
+    elif constants.CUSTOM_HEURISTIC_ID == 3:
+
+        if state.state_vars["['blue_has_flag', 'b1']"]:
+            distance_to_blue_base = math.dist([state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                             [state.state_vars["['bbcol']"], state.state_vars["['bbrow']"]])
+            return distance_to_blue_base
+
+        else:
+            distance_to_red_base = math.dist([state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                             [state.state_vars["['rbcol']"], state.state_vars["['rbrow']"]])
+            distance_to_red_agents = (math.dist([state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                                           [state.state_vars["['rcol', 'r0']"], state.state_vars["['rrow', 'r0']"]]) + \
+                                                math.dist([state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                                          [state.state_vars["['rcol', 'r1']"], state.state_vars["['rrow', 'r1']"]]) + \
+                                                math.dist([state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                                           [state.state_vars["['rcol', 'r2']"], state.state_vars["['rrow', 'r2']"]]))/3
+
+
+            return distance_to_red_base/distance_to_red_agents
+
+    elif constants.CUSTOM_HEURISTIC_ID == 4:
+
+        if state.state_vars["['blue_has_flag', 'b1']"]:
+            distance_to_blue_base = math.dist([state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                             [state.state_vars["['bbcol']"], state.state_vars["['bbrow']"]])
+            return distance_to_blue_base
+
+        else:
+            distance_to_red_base = math.dist([state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                             [state.state_vars["['rbcol']"], state.state_vars["['rbrow']"]])
+            distance_to_red_agents = (math.dist([state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                                           [state.state_vars["['rcol', 'r0']"], state.state_vars["['rrow', 'r0']"]]) + \
+                                                math.dist([state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                                          [state.state_vars["['rcol', 'r1']"], state.state_vars["['rrow', 'r1']"]]) + \
+                                                math.dist([state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                                           [state.state_vars["['rcol', 'r2']"], state.state_vars["['rrow', 'r2']"]]))/3
+
+            if (state.state_vars["['bcol', 'b1']"] >= 7):
+                distance_to_red_agents = 1
+
+
+            return distance_to_red_base/distance_to_red_agents
+
+    elif constants.CUSTOM_HEURISTIC_ID == 5:
+
+        if state.state_vars["['blue_has_flag', 'b1']"]:
+            distance_to_scrimmage_line = math.dist([state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                             [8, state.state_vars["['rbrow']"]])
+            # distance_to_scrimmage_line = math.dist([state.state_vars["['bcol', 'b1']"]], [8])
+
+            distance_to_red_agents = (math.dist(
+                [state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                [state.state_vars["['rcol', 'r0']"], state.state_vars["['rrow', 'r0']"]]) + \
+                                      math.dist(
+                                          [state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                          [state.state_vars["['rcol', 'r1']"], state.state_vars["['rrow', 'r1']"]]) + \
+                                      math.dist(
+                                          [state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                          [state.state_vars["['rcol', 'r2']"], state.state_vars["['rrow', 'r2']"]])) / 3
+
+            return distance_to_scrimmage_line/distance_to_red_agents
+
+        else:
+            distance_to_red_base = math.dist([state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                             [state.state_vars["['rbcol']"], state.state_vars["['rbrow']"]])
+            distance_to_red_agents = (math.dist(
+                [state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                [state.state_vars["['rcol', 'r0']"], state.state_vars["['rrow', 'r0']"]]) + \
+                                      math.dist(
+                                          [state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                          [state.state_vars["['rcol', 'r1']"], state.state_vars["['rrow', 'r1']"]]) + \
+                                      math.dist(
+                                          [state.state_vars["['bcol', 'b1']"], state.state_vars["['brow', 'b1']"]],
+                                          [state.state_vars["['rcol', 'r2']"], state.state_vars["['rrow', 'r2']"]])) / 3
+
+            if (state.state_vars["['bcol', 'b1']"] >= 7):
+                distance_to_red_agents = 1
+
+            return distance_to_red_base / distance_to_red_agents
+
+    elif constants.CUSTOM_HEURISTIC_ID == 6:
+
+        if state.state_vars["['blue_has_flag', 'r4']"]:
+            distance_to_scrimmage_line = math.dist([state.state_vars["['bcol', 'r4']"], state.state_vars["['brow', 'r4']"]],
+                                             [8, state.state_vars["['rbrow']"]])
+
+            distance_to_red_agents = (math.dist(
+                [state.state_vars["['bcol', 'r4']"], state.state_vars["['brow', 'r4']"]],
+                [state.state_vars["['rcol', 'b0']"], state.state_vars["['rrow', 'b0']"]]) + \
+                                      math.dist(
+                                          [state.state_vars["['bcol', 'r4']"], state.state_vars["['brow', 'r4']"]],
+                                          [state.state_vars["['rcol', 'b1']"], state.state_vars["['rrow', 'b1']"]]) + \
+                                      math.dist(
+                                          [state.state_vars["['bcol', 'r4']"], state.state_vars["['brow', 'r4']"]],
+                                          [state.state_vars["['rcol', 'b2']"], state.state_vars["['rrow', 'b2']"]])) / 3
+
+            return distance_to_scrimmage_line/distance_to_red_agents
+
+        else:
+            distance_to_red_base = math.dist([state.state_vars["['bcol', 'r4']"], state.state_vars["['brow', 'r4']"]],
+                                             [state.state_vars["['rbcol']"], state.state_vars["['rbrow']"]])
+            distance_to_red_agents = (math.dist(
+                [state.state_vars["['bcol', 'r4']"], state.state_vars["['brow', 'r4']"]],
+                [state.state_vars["['rcol', 'b0']"], state.state_vars["['rrow', 'b0']"]]) + \
+                                      math.dist(
+                                          [state.state_vars["['bcol', 'r4']"], state.state_vars["['brow', 'r4']"]],
+                                          [state.state_vars["['rcol', 'b1']"], state.state_vars["['rrow', 'b1']"]]) + \
+                                      math.dist(
+                                          [state.state_vars["['bcol', 'r4']"], state.state_vars["['brow', 'r4']"]],
+                                          [state.state_vars["['rcol', 'b2']"], state.state_vars["['rrow', 'b2']"]])) / 3
+
+            if (state.state_vars["['bcol', 'r4']"] <= 9):
+                distance_to_red_agents = 1
+
+            return distance_to_red_base / distance_to_red_agents
+
+    elif constants.CUSTOM_HEURISTIC_ID == 1:
         COLLISION_DIS = 4.2
         xb1 = state.state_vars["['x_b', 'b1']"]
         yb1 = state.state_vars["['y_b', 'b1']"]

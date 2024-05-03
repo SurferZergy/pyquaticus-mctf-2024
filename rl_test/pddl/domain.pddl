@@ -8,7 +8,7 @@
         (blue_has_flag ?b - blue)
         (red_flag_at_red_base)
         (total_failure)
-        ; (red_tagged ?r - red)
+        (red_tagged ?r - red)
     )
     (:functions
         ; (row ?c - cell)
@@ -130,11 +130,11 @@
     (:event blue_collide_r
         :parameters (?b - blue ?r - red)
         :precondition (and
-            (= (rrow ?r) (brow ?b))
-            (= (rcol ?r) (bcol ?b))
+            (<= (brow ?b) 8)
             (<= (^ (^ (- (rrow ?r) (brow ?b)) 2) 0.5) 1)
             (<= (^ (^ (- (rcol ?r) (bcol ?b)) 2) 0.5) 1)
-            ; (< (^ (+ (^ (- (brow ?b) (rrow ?r)) 2) (^ (- (bcol ?b) (rcol ?r)) 2)) 0.5) 1)
+            ; (< (^ (+ (^ (- (brow ?b) (rrow ?r)) 2) (^ (- (bcol ?b) (rcol ?r)) 2)) 0.5) 2)
+            (not (red_tagged ?r))
         )
         :effect(and
             (blue_collide ?b)
